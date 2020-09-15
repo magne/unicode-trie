@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26124.0
+MinimumVisualStudioVersion = 15.0.26124.0
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unicode-trie", "unicode-trie\unicode-trie.csproj", "{B75C9D14-45C6-4A6C-A413-06C5B03C94BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unicode-trie.tests", "unicode-trie.tests\unicode-trie.tests.csproj", "{83AAF2E1-CD99-49F4-ABAE-6AACFF19B61F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B75C9D14-45C6-4A6C-A413-06C5B03C94BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B75C9D14-45C6-4A6C-A413-06C5B03C94BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B75C9D14-45C6-4A6C-A413-06C5B03C94BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B75C9D14-45C6-4A6C-A413-06C5B03C94BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83AAF2E1-CD99-49F4-ABAE-6AACFF19B61F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83AAF2E1-CD99-49F4-ABAE-6AACFF19B61F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83AAF2E1-CD99-49F4-ABAE-6AACFF19B61F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83AAF2E1-CD99-49F4-ABAE-6AACFF19B61F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
