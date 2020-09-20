@@ -1,8 +1,15 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{5A4EB289-1AE3-4D4D-B39D-D95429C7D04A}"
+ProjectSection(SolutionItems) = preProject
+	CHANGELOG.md = CHANGELOG.md
+	Directory.Build.props = Directory.Build.props
+	LICENSE = LICENSE
+	README.md = README.md
+EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unicode-trie", "unicode-trie\unicode-trie.csproj", "{B75C9D14-45C6-4A6C-A413-06C5B03C94BB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unicode-trie.tests", "unicode-trie.tests\unicode-trie.tests.csproj", "{83AAF2E1-CD99-49F4-ABAE-6AACFF19B61F}"
