@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>unicode_trie.tests</RootNamespace>
+    <RootNamespace>CodeHive.unicode_trie.tests</RootNamespace>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>

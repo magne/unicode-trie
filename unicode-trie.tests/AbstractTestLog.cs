@@ -1,6 +1,6 @@
 using Xunit.Sdk;
 
-namespace unicode_trie.tests
+namespace CodeHive.unicode_trie.tests
 {
     public abstract class AbstractTestLog
     {

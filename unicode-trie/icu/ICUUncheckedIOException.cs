@@ -2,7 +2,7 @@ using System;
 
 // ReSharper disable InconsistentNaming
 
-namespace unicode_trie.icu
+namespace CodeHive.unicode_trie.icu
 {
     internal class ICUUncheckedIOException : Exception
     {

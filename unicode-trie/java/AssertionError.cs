@@ -1,6 +1,6 @@
 using System;
 
-namespace unicode_trie.java
+namespace CodeHive.unicode_trie.java
 {
     internal class AssertionError : Exception
     {

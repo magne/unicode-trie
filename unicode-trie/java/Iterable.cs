@@ -1,7 +1,7 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable IdentifierTypo
 
-namespace unicode_trie.java
+namespace CodeHive.unicode_trie.java
 {
     public interface Iterable<T>
     {

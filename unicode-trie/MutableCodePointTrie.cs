@@ -1,10 +1,10 @@
 using System;
-using unicode_trie.java;
+using CodeHive.unicode_trie.java;
 
 // ReSharper disable InvalidXmlDocComment
 // ReSharper disable InconsistentNaming
 
-namespace unicode_trie
+namespace CodeHive.unicode_trie
 {
     /**
      * Mutable Unicode code point trie.
@@ -37,7 +37,7 @@ namespace unicode_trie
          * @param errorValue the value for out-of-range code points and ill-formed UTF-8/16
          * @stable ICU 63
          */
-        public MutableCodePointTrie(int initialValue, int errorValue)
+        public MutableCodePointTrie(int initialValue = 0, int errorValue = 0)
         {
             index = new int[BMP_I_LIMIT];
             index3NullOffset = -1;

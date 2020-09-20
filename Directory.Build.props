@@ -4,6 +4,10 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AssemblyName>CodeHive.$(MSBuildProjectName)</AssemblyName>
+  </PropertyGroup>
+
   <ItemGroup Condition=" ! $(AssemblyName.Endswith('.tests')) ">
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>$(AssemblyName).tests</_Parameter1>

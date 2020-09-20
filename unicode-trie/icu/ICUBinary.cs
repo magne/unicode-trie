@@ -1,8 +1,8 @@
 // ReSharper disable InconsistentNaming
 
-using unicode_trie.java;
+using CodeHive.unicode_trie.java;
 
-namespace unicode_trie.icu
+namespace CodeHive.unicode_trie.icu
 {
     internal static class ICUBinary
     {

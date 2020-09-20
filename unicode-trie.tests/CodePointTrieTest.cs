@@ -1,13 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using unicode_trie.icu;
-using unicode_trie.java;
+using CodeHive.unicode_trie.icu;
+using CodeHive.unicode_trie.java;
 using Xunit;
 
 // ReSharper disable InconsistentNaming
 
-namespace unicode_trie.tests
+namespace CodeHive.unicode_trie.tests
 {
     public class CodePointTrieTest : TestFmwk
     {

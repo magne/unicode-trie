@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace unicode_trie.tests
+namespace CodeHive.unicode_trie.tests
 {
     public class TestFmwk : AbstractTestLog
     {

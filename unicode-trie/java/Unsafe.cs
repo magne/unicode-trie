@@ -1,7 +1,8 @@
 using System;
+
 // ReSharper disable InconsistentNaming
 
-namespace unicode_trie.java
+namespace CodeHive.unicode_trie.java
 {
     internal class Unsafe
     {

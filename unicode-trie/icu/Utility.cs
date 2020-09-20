@@ -1,4 +1,4 @@
-namespace unicode_trie.icu
+namespace CodeHive.unicode_trie.icu
 {
     public class Utility
     {

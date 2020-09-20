@@ -1,6 +1,6 @@
 // ReSharper disable InconsistentNaming
 
-namespace unicode_trie.java
+namespace CodeHive.unicode_trie.java
 {
     internal static class StringLatin1
     {

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
-using unicode_trie.icu;
-using unicode_trie.java;
+using CodeHive.unicode_trie.icu;
+using CodeHive.unicode_trie.java;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable InvalidXmlDocComment
 #pragma warning disable 612
 
-namespace unicode_trie
+namespace CodeHive.unicode_trie
 {
     /**
      * Immutable Unicode code point trie.

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>unicode_trie</RootNamespace>
+    <RootNamespace>CodeHive.unicode_trie</RootNamespace>
   </PropertyGroup>
 
 </Project>

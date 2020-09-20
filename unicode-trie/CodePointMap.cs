@@ -1,13 +1,13 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using unicode_trie.java;
+using CodeHive.unicode_trie.java;
 
 #pragma warning disable 612
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable InvalidXmlDocComment
 
-namespace unicode_trie
+namespace CodeHive.unicode_trie
 {
     /**
      * Abstract map from Unicode code points (U+0000..U+10FFFF) to integer values.
