@@ -1,0 +1,34 @@
+name: Master CI
+
+on:
+  push:
+    branches:
+      - master
+    # tags:
+    #   - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    name: Continuous Integration
+    runs-on: ubuntu-20.04
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.0.0
+        with:
+          ref: 'master'
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.402'
+
+      - name: Disable .Net Welcome
+        run: touch "$HOME/.dotnet/$(dotnet --version).dotnetFirstUseSentinel"
+
+      - name: Build
+        run: dotnet build --configuration Release unicode-trie.sln
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build unicode-trie.sln
