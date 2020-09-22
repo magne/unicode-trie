@@ -1,10 +1,11 @@
 using System;
+using CodeHive.unicode_trie.java;
 
 // ReSharper disable InconsistentNaming
 
-namespace CodeHive.unicode_trie.java
+namespace CodeHive.unicode_trie.tests.java
 {
-    public class StringBuilder : CharSequence
+    internal class StringBuilder : CharSequence
     {
         private const bool COMPACT_STRINGS = true;
 
@@ -82,7 +83,7 @@ namespace CodeHive.unicode_trie.java
 
         public char charAt(in int index)
         {
-            checkIndex(index, this.count);
+            StringUTF16.checkIndex(index, this.count);
             return this.isLatin1() ? (char) (this.value[index] & 255) : StringUTF16.charAt(this.value, index);
         }
 
@@ -90,7 +91,7 @@ namespace CodeHive.unicode_trie.java
         {
             int count = this.count;
             byte[] value = this.value;
-            checkIndex(index, count);
+            StringUTF16.checkIndex(index, count);
             return this.isLatin1() ? value[index] & 255 : StringUTF16.codePointAtSB(value, index, count);
         }
 
@@ -174,14 +175,6 @@ namespace CodeHive.unicode_trie.java
             }
 
             this.count = count + end - off;
-        }
-
-        internal static void checkIndex(in int index, in int length)
-        {
-            if (index < 0 || index >= length)
-            {
-                throw new ArgumentException("index " + index + ", length " + length);
-            }
         }
     }
 }

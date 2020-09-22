@@ -54,7 +54,7 @@ namespace CodeHive.unicode_trie.java
 
         public static void checkIndex(int off, byte[] val)
         {
-            StringBuilder.checkIndex(off, length(val));
+            checkIndex(off, length(val));
         }
 
         public static int length(byte[] value)
@@ -195,6 +195,14 @@ namespace CodeHive.unicode_trie.java
             if (offset < 0 || count < 0 || offset > length - count)
             {
                 throw new ArgumentException("offset " + offset + ", count " + count + ", length " + length);
+            }
+        }
+
+        internal static void checkIndex(in int index, in int length)
+        {
+            if (index < 0 || index >= length)
+            {
+                throw new ArgumentException("index " + index + ", length " + length);
             }
         }
     }

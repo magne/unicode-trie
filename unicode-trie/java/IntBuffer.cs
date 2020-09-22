@@ -8,7 +8,6 @@ namespace CodeHive.unicode_trie.java
     {
         readonly int[] hb;
         readonly int   offset;
-        bool           isReadOnly;
 
         private IntBuffer(int mark, int pos, int lim, int cap, int[] hb, int offset, MemorySegmentProxy segment)
             : base(mark, pos, lim, cap, segment)

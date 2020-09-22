@@ -1,6 +1,6 @@
 namespace CodeHive.unicode_trie.icu
 {
-    public class Utility
+    internal static class Utility
     {
         /**
          * Convert a char to 4 hex uppercase digits.  E.g., hex('a') =>

@@ -6,12 +6,12 @@ namespace CodeHive.unicode_trie.icu
      * C++ normalizer2impl.h and in the design doc at
      * http://site.icu-project.org/design/normalization/custom
      */
-    public sealed class Normalizer2Impl
+    internal static class Normalizer2Impl
     {
         // TODO: Propose as public API on the UTF16 class.
         // TODO: Propose widening UTF16 methods that take char to take int.
         // TODO: Propose widening UTF16 methods that take String to take CharSequence.
-        public static class UTF16Plus
+        internal static class UTF16Plus
         {
             /**
              * Is this code point a lead surrogate (U+d800..U+dbff)?

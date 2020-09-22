@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using CodeHive.unicode_trie.icu;
 using CodeHive.unicode_trie.java;
+using CodeHive.unicode_trie.tests.java;
 using Xunit;
 
 // ReSharper disable InconsistentNaming

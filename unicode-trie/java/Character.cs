@@ -4,7 +4,7 @@ using System;
 
 namespace CodeHive.unicode_trie.java
 {
-    public static class Character
+    internal static class Character
     {
         public static int codePointAt(CharSequence seq, int index)
         {

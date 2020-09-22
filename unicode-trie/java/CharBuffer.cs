@@ -8,9 +8,8 @@ namespace CodeHive.unicode_trie.java
     {
         readonly char[] hb;
         readonly int    offset;
-        bool            isReadOnly;
 
-        internal CharBuffer(int mark, int pos, int lim, int cap, char[] hb, int offset, MemorySegmentProxy segment)
+        private CharBuffer(int mark, int pos, int lim, int cap, char[] hb, int offset, MemorySegmentProxy segment)
             : base(mark, pos, lim, cap, segment)
         {
             this.hb = hb;

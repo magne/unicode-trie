@@ -8,11 +8,10 @@ namespace CodeHive.unicode_trie.java
     {
         internal readonly byte[] hb;
         readonly          int    offset;
-        bool                     isReadOnly;
         bool                     bigEndian;
         bool                     nativeByteOrder;
 
-        protected ByteBuffer(int mark, in int pos, int lim, in int cap, byte[] hb, int offset, MemorySegmentProxy segment)
+        private ByteBuffer(int mark, in int pos, int lim, in int cap, byte[] hb, int offset, MemorySegmentProxy segment)
             : base(mark, pos, lim, cap, segment)
         {
             this.bigEndian = true;
@@ -21,7 +20,7 @@ namespace CodeHive.unicode_trie.java
             this.offset = offset;
         }
 
-        public static ByteBuffer wrap(byte[] array, int offset, int length)
+        private static ByteBuffer wrap(byte[] array, int offset, int length)
         {
             return new HeapByteBuffer(array, offset, length, (MemorySegmentProxy) null);
         }

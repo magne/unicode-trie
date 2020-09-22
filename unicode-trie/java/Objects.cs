@@ -4,7 +4,7 @@ using System;
 
 namespace CodeHive.unicode_trie.java
 {
-    public static class Objects
+    internal static class Objects
     {
         public static int checkFromIndexSize(int fromIndex, int size, int length)
         {
