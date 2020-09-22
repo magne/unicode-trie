@@ -9,81 +9,74 @@ using CodeHive.unicode_trie.java;
 
 namespace CodeHive.unicode_trie
 {
-    /**
-     * Immutable Unicode code point trie.
-     * Fast, reasonably compact, map from Unicode code points (U+0000..U+10FFFF) to integer values.
-     * For details see http://site.icu-project.org/design/struct/utrie
-     *
-     * <p>This class is not intended for public subclassing.
-     *
-     * @see MutableCodePointTrie
-     * @stable ICU 63
-     */
+    /// <summary>
+    /// Immutable Unicode code point trie.
+    /// Fast, reasonably compact, map from Unicode code points (U+0000..U+10FFFF) to integer values.
+    /// For details see http://site.icu-project.org/design/struct/utrie
+    ///
+    /// <p/>This class is not intended for public subclassing.
+    /// </summary>
+    /// <seealso cref="MutableCodePointTrie"/>
+    /// <p/> @stable ICU 63
     public abstract class CodePointTrie : CodePointMap
     {
-        /**
-         * Selectors for the type of a CodePointTrie.
-         * Different trade-offs for size vs. speed.
-         *
-         * <p>Use null for {@link #fromBinary} to accept any type;
-         * {@link #getType} will return the actual type.
-         *
-         * @see MutableCodePointTrie#buildImmutable(CodePointTrie.Type, CodePointTrie.ValueWidth)
-         * @see #fromBinary
-         * @see #getType
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Selectors for the type of a CodePointTrie.
+        /// Different trade-offs for size vs. speed.
+        ///
+        /// <p/>Use null for <see cref="CodePointTrie.fromBinary"/> to accept any type;
+        /// <see cref="CodePointTrie.getType"/> will return the actual type.
+        /// </summary>
+        /// <seealso cref="MutableCodePointTrie.buildImmutable"/>
+        /// <seealso cref="CodePointTrie.fromBinary"/>
+        /// <seealso cref="CodePointTrie.getType"/>
+        /// <p/> @stable ICU 63
         public enum Type
         {
-            /**
-             * Fast/simple/larger BMP data structure.
-             * The {@link Fast} subclasses have additional functions for lookup for BMP and supplementary code points.
-             *
-             * @see Fast
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Fast/simple/larger BMP data structure.
+            /// The <see cref="CodePointTrie.Fast"/> subclasses have additional functions for lookup for BMP
+            /// and supplementary code points.
+            /// </summary>
+            /// <seealso cref="CodePointTrie.Fast"/>
+            /// <p/> @stable ICU 63
             FAST,
 
-            /**
-             * Small/slower BMP data structure.
-             *
-             * @see Small
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Small/slower BMP data structure.
+            /// </summary>
+            /// <seealso cref="CodePointTrie.Small"/>
+            /// <p/> @stable ICU 63
             SMALL
         }
 
-        /**
-         * Selectors for the number of bits in a CodePointTrie data value.
-         *
-         * <p>Use null for {@link #fromBinary} to accept any data value width;
-         * {@link #getValueWidth} will return the actual data value width.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Selectors for the number of bits in a CodePointTrie data value.
+        ///
+        /// <p/>Use null for <see cref="CodePointTrie.fromBinary"/> to accept any data value width;
+        /// <see cref="CodePointTrie.getValueWidth"/> will return the actual data value width.
+        /// </summary>
+        /// <p/> @stable ICU 63
         public enum ValueWidth
         {
-            /**
-             * The trie stores 16 bits per data value.
-             * It returns them as unsigned values 0..0xffff=65535.
-             *
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// The trie stores 16 bits per data value.
+            /// It returns them as unsigned values 0..0xffff=65535.
+            /// </summary>
+            /// <p/> @stable ICU 63
             BITS_16,
 
-            /**
-             * The trie stores 32 bits per data value.
-             *
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// The trie stores 32 bits per data value.
+            /// </summary>
+            /// <p/> @stable ICU 63
             BITS_32,
 
-            /**
-             * The trie stores 8 bits per data value.
-             * It returns them as unsigned values 0..0xff=255.
-             *
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// The trie stores 8 bits per data value.
+            /// It returns them as unsigned values 0..0xff=255.
+            /// </summary>
+            /// <p/> @stable ICU 63
             BITS_8
         }
 
@@ -112,28 +105,27 @@ namespace CodeHive.unicode_trie
             nullValue = data.getFromIndex(nullValueOffset);
         }
 
-        /**
-         * Creates a trie from its binary form,
-         * stored in the ByteBuffer starting at the current position.
-         * Advances the buffer position to just after the trie data.
-         * Inverse of {@link #toBinary(OutputStream)}.
-         *
-         * <p>The data is copied from the buffer;
-         * later modification of the buffer will not affect the trie.
-         *
-         * @param type selects the trie type; this method throws an exception
-         *             if the type does not match the binary data;
-         *             use null to accept any type
-         * @param valueWidth selects the number of bits in a data value; this method throws an exception
-         *                  if the valueWidth does not match the binary data;
-         *                  use null to accept any data value width
-         * @param bytes a buffer containing the binary data of a CodePointTrie
-         * @return the trie
-         * @see MutableCodePointTrie#MutableCodePointTrie(int, int)
-         * @see MutableCodePointTrie#buildImmutable(CodePointTrie.Type, CodePointTrie.ValueWidth)
-         * @see #toBinary(OutputStream)
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Creates a trie from its binary form,
+        /// stored in the ByteBuffer starting at the current position.
+        /// Advances the buffer position to just after the trie data.
+        /// Inverse of <see cref="toBinary"/>.
+        ///
+        /// <p>The data is copied from the buffer;
+        /// later modification of the buffer will not affect the trie.
+        /// </summary>
+        /// <param name="type">selects the trie type; this method throws an exception
+        ///             if the type does not match the binary data;
+        ///             use null to accept any type</param>
+        /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
+        ///                  if the valueWidth does not match the binary data;
+        ///                  use null to accept any data value width</param>
+        /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+        /// <returns>the trie</returns>
+        /// <seealso cref="MutableCodePointTrie"/>
+        /// <seealso cref="MutableCodePointTrie.buildImmutable"/>
+        /// <seealso cref="toBinary"/>
+        /// <p/> @stable ICU 63
         public static CodePointTrie fromBinary(Type? type, ValueWidth? valueWidth, ByteBuffer bytes)
         {
             ByteOrder outerByteOrder = bytes.order();
@@ -307,41 +299,36 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /**
-         * Returns the trie type.
-         *
-         * @return the trie type
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Returns the trie type.
+        /// </summary>
+        /// <returns>the trie type</returns>
+        /// <p/> @stable ICU 63
         public abstract Type getType();
 
-        /**
-         * Returns the number of bits in a trie data value.
-         *
-         * @return the number of bits in a trie data value
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Returns the number of bits in a trie data value.
+        /// </summary>
+        /// <returns>the number of bits in a trie data value</returns>
+        /// <p/> @stable ICU 63
         public ValueWidth getValueWidth()
         {
             return data.getValueWidth();
         }
 
-        /**
-         * {@inheritDoc}
-         * @stable ICU 63
-         */
+        /// <inheritdoc />
+        /// <p/> @stable ICU 63
         public override int get(int c)
         {
             return data.getFromIndex(cpIndex(c));
         }
 
-        /**
-         * Returns a trie value for an ASCII code point, without range checking.
-         *
-         * @param c the input code point; must be U+0000..U+007F
-         * @return The ASCII code point's trie value.
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Returns a trie value for an ASCII code point, without range checking.
+        /// </summary>
+        /// <param name="c">the input code point; must be U+0000..U+007F</param>
+        /// <returns>The ASCII code point's trie value</returns>
+        /// <p/> @stable ICU 63
         public int asciiGet(int c)
         {
             return ascii[c];
@@ -366,10 +353,8 @@ namespace CodeHive.unicode_trie
             return value;
         }
 
-        /**
-         * {@inheritDoc}
-         * @stable ICU 63
-         */
+        /// <inheritdoc />
+        /// <p/> @stable ICU 63
         public override bool getRange(int start, ValueFilter filter, Range range)
         {
             if (start < 0 || MAX_UNICODE < start)
@@ -581,14 +566,13 @@ namespace CodeHive.unicode_trie
             return true;
         }
 
-        /**
-         * Writes a representation of the trie to the output stream.
-         * Inverse of {@link #fromBinary}.
-         *
-         * @param os the output stream
-         * @return the number of bytes written
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Writes a representation of the trie to the output stream.
+        /// * Inverse of <see cref="fromBinary"/>.
+        /// </summary>
+        /// <param name="os">the output stream</param>
+        /// <returns>the number of bytes written</returns>
+        /// <p/> @stable ICU 63
         public int toBinary(Stream os)
         {
             try
@@ -840,23 +824,16 @@ namespace CodeHive.unicode_trie
         /** @internal */
         private readonly char[] index;
 
-        /**
-         * @internal
-         * @deprecated This API is ICU internal only.
-         */
+        /// <remarks>This API is ICU internal only.</remarks>
         [Obsolete] protected readonly Data data;
 
-        /**
-         * @internal
-         * @deprecated This API is ICU internal only.
-         */
+        /// <remarks>This API is ICU internal only.</remarks>
         [Obsolete] protected readonly int dataLength;
 
         /**
          * Start of the last range which ends at U+10FFFF.
-         * @internal
-         * @deprecated This API is ICU internal only.
          */
+        /// <remarks>This API is ICU internal only.</remarks>
         [Obsolete] protected readonly int highStart;
 
         /**
@@ -876,20 +853,14 @@ namespace CodeHive.unicode_trie
         /** @internal */
         private readonly int nullValue;
 
-        /**
-         * @internal
-         * @deprecated This API is ICU internal only.
-         */
+        /// <remarks>This API is ICU internal only.</remarks>
         [Obsolete]
         protected int fastIndex(int c)
         {
             return index[c >> FAST_SHIFT] + (c & FAST_DATA_MASK);
         }
 
-        /**
-         * @internal
-         * @deprecated This API is ICU internal only.
-         */
+        /// <remarks>This API is ICU internal only.</remarks>
         [Obsolete]
         protected int smallIndex(Type type, int c)
         {
@@ -938,18 +909,14 @@ namespace CodeHive.unicode_trie
             return dataBlock + (c & SMALL_DATA_MASK);
         }
 
-        /**
-         * @internal
-         * @deprecated This API is ICU internal only.
-         */
+        /// <remarks>This API is ICU internal only.</remarks>
         [Obsolete]
         protected abstract int cpIndex(int c);
 
-        /**
-         * A CodePointTrie with {@link Type#FAST}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointMap.Type.FAST"/>
+        /// </summary>
+        /// <p/> @stable ICU 63
         public abstract class Fast : CodePointTrie
         {
             internal Fast(char[] index, Data data, int highStart,
@@ -957,57 +924,48 @@ namespace CodeHive.unicode_trie
                 : base(index, data, highStart, index3NullOffset, dataNullOffset)
             { }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#FAST}.
-             *
-             * @param valueWidth selects the number of bits in a data value; this method throws an exception
-             *                  if the valueWidth does not match the binary data;
-             *                  use null to accept any data value width
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with type <see cref="CodePointTrie.Type.FAST"/>.
+            /// </summary>
+            /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
+            ///                  if the valueWidth does not match the binary data;
+            ///                  use null to accept any data value width</param>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Fast fromBinary(ValueWidth valueWidth, ByteBuffer bytes)
             {
                 return (Fast) CodePointTrie.fromBinary(Type.FAST, valueWidth, bytes);
             }
 
-            /**
-             * @return {@link Type#FAST}
-             * @stable ICU 63
-             */
+            /// <returns><see cref="Type.FAST"/></returns>
+            /// <p/> @stable ICU 63
             public override Type getType()
             {
                 return Type.FAST;
             }
 
-            /**
-             * Returns a trie value for a BMP code point (U+0000..U+FFFF), without range checking.
-             * Can be used to look up a value for a UTF-16 code unit if other parts of
-             * the string processing check for surrogates.
-             *
-             * @param c the input code point, must be U+0000..U+FFFF
-             * @return The BMP code point's trie value.
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Returns a trie value for a BMP code point (U+0000..U+FFFF), without range checking.
+            /// Can be used to look up a value for a UTF-16 code unit if other parts of
+            /// the string processing check for surrogates.
+            /// </summary>
+            /// <param name="c">the input code point, must be U+0000..U+FFFF</param>
+            /// <returns>The BMP code point's trie value.</returns>
+            /// <p/> @stable ICU 63
             public abstract int bmpGet(int c);
 
-            /**
-             * Returns a trie value for a supplementary code point (U+10000..U+10FFFF),
-             * without range checking.
-             *
-             * @param c the input code point, must be U+10000..U+10FFFF
-             * @return The supplementary code point's trie value.
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Returns a trie value for a supplementary code point (U+10000..U+10FFFF),
+            /// without range checking.
+            /// </summary>
+            /// <param name="c">the input code point, must be U+10000..U+10FFFF</param>
+            /// <returns>The supplementary code point's trie value.</returns>
+            /// <p/> @stable ICU 63
             public abstract int suppGet(int c);
 
-            /**
-             * @internal
-             * @deprecated This API is ICU internal only.
-             */
+            /// <remarks>This API is ICU internal only.</remarks>
             [Obsolete]
             protected override int cpIndex(int c)
             {
@@ -1026,10 +984,8 @@ namespace CodeHive.unicode_trie
                 return dataLength - ERROR_VALUE_NEG_DATA_OFFSET;
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override StringIterator stringIterator(CharSequence s, int sIndex)
             {
                 return new FastStringIterator(this, s, sIndex);
@@ -1115,11 +1071,10 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /**
-         * A CodePointTrie with {@link Type#SMALL}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/>
+        /// </summary>
+        /// <p/> @stable ICU 63
         public abstract class Small : CodePointTrie
         {
             internal Small(char[] index, Data data, int highStart,
@@ -1127,36 +1082,29 @@ namespace CodeHive.unicode_trie
                 : base(index, data, highStart, index3NullOffset, dataNullOffset)
             { }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#SMALL}.
-             *
-             * @param valueWidth selects the number of bits in a data value; this method throws an exception
-             *                  if the valueWidth does not match the binary data;
-             *                  use null to accept any data value width
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>.
+            /// </summary>
+            /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
+            ///                  if the valueWidth does not match the binary data;
+            ///                  use null to accept any data value width</param>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Small fromBinary(ValueWidth valueWidth, ByteBuffer bytes)
             {
                 return (Small) CodePointTrie.fromBinary(Type.SMALL, valueWidth, bytes);
             }
 
-            /**
-             * @return {@link Type#SMALL}
-             * @stable ICU 63
-             */
+            /// <returns><see cref="CodePointTrie.Type.SMALL"/></returns>
+            /// <p/> @stable ICU 63
             public override Type getType()
             {
                 return Type.SMALL;
             }
 
-            /**
-             * @internal
-             * @deprecated This API is ICU internal only.
-             */
+            /// <remarks>This API is ICU internal only.</remarks>
             [Obsolete]
             protected override int cpIndex(int c)
             {
@@ -1175,10 +1123,8 @@ namespace CodeHive.unicode_trie
                 return dataLength - ERROR_VALUE_NEG_DATA_OFFSET;
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override StringIterator stringIterator(CharSequence s, int sIndex)
             {
                 return new SmallStringIterator(this, s, sIndex);
@@ -1264,11 +1210,11 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /**
-         * A CodePointTrie with {@link Type#FAST} and {@link ValueWidth#BITS_16}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointTrie.Type.FAST"/> and
+        /// <see cref="CodePointTrie.getValueWidth.BITS_16"/>.
+        /// </summary>
+        /// <p/> @stable ICU 63
         public class Fast16 : Fast
         {
             private char[] dataArray;
@@ -1280,43 +1226,36 @@ namespace CodeHive.unicode_trie
                 this.dataArray = data16;
             }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#FAST} and {@link ValueWidth#BITS_16}.
-             *
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.FAST"/>
+            /// and <see cref="CodePointTrie.ValueWidth.BITS_16"/>.
+            /// </summary>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Fast16 fromBinary(ByteBuffer bytes)
             {
                 return (Fast16) CodePointTrie.fromBinary(Type.FAST, ValueWidth.BITS_16, bytes);
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int get(int c)
             {
                 return dataArray[cpIndex(c)];
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int bmpGet(int c)
             {
                 assert(0 <= c && c <= 0xffff);
                 return dataArray[fastIndex(c)];
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int suppGet(int c)
             {
                 assert(0x10000 <= c && c <= 0x10ffff);
@@ -1324,11 +1263,11 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /**
-         * A CodePointTrie with {@link Type#FAST} and {@link ValueWidth#BITS_32}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointTrie.Type.FAST"/> and
+        /// <see cref="CodePointTrie.getValueWidth.BITS_32"/>.
+        /// </summary>
+        /// <p/> @stable ICU 63
         public class Fast32 : Fast
         {
             private readonly int[] dataArray;
@@ -1340,43 +1279,36 @@ namespace CodeHive.unicode_trie
                 this.dataArray = data32;
             }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#FAST} and {@link ValueWidth#BITS_32}.
-             *
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.FAST"/>
+            /// and <see cref="CodePointTrie.ValueWidth.BITS_32"/>.
+            /// </summary>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Fast32 fromBinary(ByteBuffer bytes)
             {
                 return (Fast32) CodePointTrie.fromBinary(Type.FAST, ValueWidth.BITS_32, bytes);
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int get(int c)
             {
                 return dataArray[cpIndex(c)];
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int bmpGet(int c)
             {
                 assert(0 <= c && c <= 0xffff);
                 return dataArray[fastIndex(c)];
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int suppGet(int c)
             {
                 assert(0x10000 <= c && c <= 0x10ffff);
@@ -1384,11 +1316,11 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /**
-         * A CodePointTrie with {@link Type#FAST} and {@link ValueWidth#BITS_8}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointTrie.Type.FAST"/> and
+        /// <see cref="CodePointTrie.getValueWidth.BITS_8"/>.
+        /// </summary>
+        /// <p/> @stable ICU 63
         public class Fast8 : Fast
         {
             private readonly byte[] dataArray;
@@ -1400,43 +1332,36 @@ namespace CodeHive.unicode_trie
                 this.dataArray = data8;
             }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#FAST} and {@link ValueWidth#BITS_8}.
-             *
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.FAST"/>
+            /// and <see cref="CodePointTrie.ValueWidth.BITS_8"/>.
+            /// </summary>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Fast8 fromBinary(ByteBuffer bytes)
             {
                 return (Fast8) CodePointTrie.fromBinary(Type.FAST, ValueWidth.BITS_8, bytes);
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int get(int c)
             {
                 return dataArray[cpIndex(c)] & 0xff;
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int bmpGet(int c)
             {
                 assert(0 <= c && c <= 0xffff);
                 return dataArray[fastIndex(c)] & 0xff;
             }
 
-            /**
-             * {@inheritDoc}
-             * @stable ICU 63
-             */
+            /// <inheritdoc />
+            /// <p/> @stable ICU 63
             public override int suppGet(int c)
             {
                 assert(0x10000 <= c && c <= 0x10ffff);
@@ -1444,11 +1369,11 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /**
-         * A CodePointTrie with {@link Type#SMALL} and {@link ValueWidth#BITS_16}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/> and
+        /// <see cref="CodePointTrie.getValueWidth.BITS_16"/>.
+        /// </summary>
+        /// <p/> @stable ICU 63
         public class Small16 : Small
         {
             internal Small16(char[] index, char[] data16, int highStart,
@@ -1456,26 +1381,25 @@ namespace CodeHive.unicode_trie
                 : base(index, new Data16(data16), highStart, index3NullOffset, dataNullOffset)
             { }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#SMALL} and {@link ValueWidth#BITS_16}.
-             *
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>
+            /// and <see cref="CodePointTrie.ValueWidth.BITS_16"/>.
+            /// </summary>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Small16 fromBinary(ByteBuffer bytes)
             {
                 return (Small16) CodePointTrie.fromBinary(Type.SMALL, ValueWidth.BITS_16, bytes);
             }
         }
 
-        /**
-         * A CodePointTrie with {@link Type#SMALL} and {@link ValueWidth#BITS_32}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/> and
+        /// <see cref="CodePointTrie.getValueWidth.BITS_32"/>.
+        /// </summary>
+        /// <p/> @stable ICU 63
         public class Small32 : Small
         {
             internal Small32(char[] index, int[] data32, int highStart,
@@ -1483,26 +1407,25 @@ namespace CodeHive.unicode_trie
                 : base(index, new Data32(data32), highStart, index3NullOffset, dataNullOffset)
             { }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#SMALL} and {@link ValueWidth#BITS_32}.
-             *
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>
+            /// and <see cref="CodePointTrie.ValueWidth.BITS_32"/>.
+            /// </summary>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Small32 fromBinary(ByteBuffer bytes)
             {
                 return (Small32) CodePointTrie.fromBinary(Type.SMALL, ValueWidth.BITS_32, bytes);
             }
         }
 
-        /**
-         * A CodePointTrie with {@link Type#SMALL} and {@link ValueWidth#BITS_8}.
-         *
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/> and
+        /// <see cref="CodePointTrie.getValueWidth.BITS_8"/>.
+        /// </summary>
+        /// <p/> @stable ICU 63
         public class Small8 : Small
         {
             internal Small8(char[] index, byte[] data8, int highStart,
@@ -1510,15 +1433,14 @@ namespace CodeHive.unicode_trie
                 : base(index, new Data8(data8), highStart, index3NullOffset, dataNullOffset)
             { }
 
-            /**
-             * Creates a trie from its binary form.
-             * Same as {@link CodePointTrie#fromBinary(Type, ValueWidth, ByteBuffer)}
-             * with {@link Type#SMALL} and {@link ValueWidth#BITS_8}.
-             *
-             * @param bytes a buffer containing the binary data of a CodePointTrie
-             * @return the trie
-             * @stable ICU 63
-             */
+            /// <summary>
+            /// Creates a trie from its binary form.
+            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>
+            /// and <see cref="CodePointTrie.ValueWidth.BITS_8"/>.
+            /// </summary>
+            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <returns>the trie</returns>
+            /// <p/> @stable ICU 63
             public static Small8 fromBinary(ByteBuffer bytes)
             {
                 return (Small8) CodePointTrie.fromBinary(Type.SMALL, ValueWidth.BITS_8, bytes);

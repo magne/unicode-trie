@@ -1,42 +1,38 @@
 using System;
 using CodeHive.unicode_trie.java;
 
-// ReSharper disable InvalidXmlDocComment
 // ReSharper disable InconsistentNaming
 
 namespace CodeHive.unicode_trie
 {
-    /**
-     * Mutable Unicode code point trie.
-     * Fast map from Unicode code points (U+0000..U+10FFFF) to 32-bit integer values.
-     * For details see http://site.icu-project.org/design/struct/utrie
-     *
-     * <p>Setting values (especially ranges) and lookup is fast.
-     * The mutable trie is only somewhat space-efficient.
-     * It builds a compacted, immutable {@link CodePointTrie}.
-     *
-     * <p>This trie can be modified while iterating over its contents.
-     * For example, it is possible to merge its values with those from another
-     * set of ranges (e.g., another @{link CodePointMap}):
-     * Iterate over those source ranges; for each of them iterate over this trie;
-     * add the source value into the value of each trie range.
-     *
-     * @stable ICU 63
-     */
+    /// <summary>
+    /// Mutable Unicode code point trie.
+    /// Fast map from Unicode code points (U+0000..U+10FFFF) to 32-bit integer values.
+    /// For details see http://site.icu-project.org/design/struct/utrie
+    ///
+    /// <p/>Setting values (especially ranges) and lookup is fast.
+    /// The mutable trie is only somewhat space-efficient.
+    /// It builds a compacted, immutable <see cref="CodePointTrie"/>.
+    ///
+    /// <p/>This trie can be modified while iterating over its contents.
+    /// For example, it is possible to merge its values with those from another
+    /// set of ranges (e.g., another <see cref="CodePointMap"/>:
+    /// Iterate over those source ranges; for each of them iterate over this trie;
+    /// add the source value into the value of each trie range.
+    /// </summary>
+    /// <p/> @stable ICU 63
     public sealed class MutableCodePointTrie : CodePointMap, ICloneable
     {
-        /**
-         * Constructs a mutable trie that initially maps each Unicode code point to the same value.
-         * It uses 32-bit data values until
-         * {@link #buildImmutable(com.ibm.icu.util.CodePointTrie.Type, com.ibm.icu.util.CodePointTrie.ValueWidth)}
-         * is called.
-         * buildImmutable() takes a valueWidth parameter which
-         * determines the number of bits in the data value in the resulting {@link CodePointTrie}.
-         *
-         * @param initialValue the initial value that is set for all code points
-         * @param errorValue the value for out-of-range code points and ill-formed UTF-8/16
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Constructs a mutable trie that initially maps each Unicode code point to the same value.
+        /// It uses 32-bit data values until <see cref="buildImmutable"/>is called.
+        ///
+        /// <p/><see cref="buildImmutable"/> takes a valueWidth parameter which determines the
+        /// number of bits in the data value in the resulting <see cref="CodePointTrie"/>.
+        /// </summary>
+        /// <param name="initialValue">the initial value that is set for all code points</param>
+        /// <param name="errorValue">the value for out-of-range code points and ill-formed UTF-8/16</param>
+        /// <p/> @stable ICU 63
         public MutableCodePointTrie(int initialValue = 0, int errorValue = 0)
         {
             index = new int[BMP_I_LIMIT];
@@ -49,12 +45,11 @@ namespace CodeHive.unicode_trie
             highValue = initialValue;
         }
 
-        /**
-         * Clones this mutable trie.
-         *
-         * @return the clone
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Clones this mutable trie.
+        /// </summary>
+        /// <returns>the clone</returns>
+        /// <p/> @stable ICU 63
         public object Clone()
         {
             MutableCodePointTrie builder = (MutableCodePointTrie) MemberwiseClone();
@@ -80,13 +75,12 @@ namespace CodeHive.unicode_trie
             return builder;
         }
 
-        /**
-         * Creates a mutable trie with the same contents as the {@link CodePointMap}.
-         *
-         * @param map the source map or trie
-         * @return the mutable trie
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Creates a mutable trie with the same contents as the {@link CodePointMap}.
+        /// </summary>
+        /// <param name="map">the source map or trie</param>
+        /// <returns>the mutable trie</returns>
+        /// <p/> @stable ICU 63
         public static MutableCodePointTrie fromCodePointMap(CodePointMap map)
         {
             // TODO: Consider special code branch for map instanceof CodePointTrie?
@@ -127,10 +121,7 @@ namespace CodeHive.unicode_trie
             index16 = null;
         }
 
-        /**
-         * {@inheritDoc}
-         * @stable ICU 63
-         */
+        /// <inheritdoc />
         public override int get(int c)
         {
             if (c < 0 || MAX_UNICODE < c)
@@ -169,13 +160,8 @@ namespace CodeHive.unicode_trie
             return value;
         }
 
-        /**
-         * {@inheritDoc}
-         *
-         * <p>The trie can be modified between calls to this function.
-         *
-         * @stable ICU 63
-         */
+        /// <inheritdoc />
+        /// <remarks>The trie can be modified between calls to this function.</remarks>
         public override bool getRange(int start, ValueFilter filter,
                                       Range range)
         {
@@ -303,13 +289,12 @@ namespace CodeHive.unicode_trie
             Array.Fill(data, value, block, limit - block);
         }
 
-        /**
-         * Sets a value for a code point.
-         *
-         * @param c the code point
-         * @param value the value
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Sets a value for a code point.
+        /// </summary>
+        /// <param name="c">the code point</param>
+        /// <param name="value"> the value</param>
+        /// <p/> @stable ICU 63
         public void set(int c, int value)
         {
             if (c < 0 || MAX_UNICODE < c)
@@ -327,15 +312,14 @@ namespace CodeHive.unicode_trie
             Array.Fill(data, value, block + start, limit - start);
         }
 
-        /**
-         * Sets a value for each code point [start..end].
-         * Faster and more space-efficient than setting the value for each code point separately.
-         *
-         * @param start the first code point to get the value
-         * @param end the last code point to get the value (inclusive)
-         * @param value the value
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Sets a value for each code point [start..end].
+        /// Faster and more space-efficient than setting the value for each code point separately.
+        /// </summary>
+        /// <param name="start">the first code point to get the value</param>
+        /// <param name="end">the last code point to get the value (inclusive)</param>
+        /// <param name="value">the value</param>
+        /// <p/> @stable ICU 63
         public void setRange(int start, int end, int value)
         {
             if (start < 0 || MAX_UNICODE < start || end < 0 || MAX_UNICODE < end || start > end)
@@ -395,35 +379,34 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /**
-         * Compacts the data and builds an immutable {@link CodePointTrie} according to the parameters.
-         * After this, the mutable trie will be empty.
-         *
-         * <p>The mutable trie stores 32-bit values until buildImmutable() is called.
-         * If values shorter than 32 bits are to be stored in the immutable trie,
-         * then the upper bits are discarded.
-         * For example, when the mutable trie contains values 0x81, -0x7f, and 0xa581,
-         * and the value width is 8 bits, then each of these is stored as 0x81
-         * and the immutable trie will return that as an unsigned value.
-         * (Some implementations may want to make productive temporary use of the upper bits
-         * until buildImmutable() discards them.)
-         *
-         * <p>Not every possible set of mappings can be built into a CodePointTrie,
-         * because of limitations resulting from speed and space optimizations.
-         * Every Unicode assigned character can be mapped to a unique value.
-         * Typical data yields data structures far smaller than the limitations.
-         *
-         * <p>It is possible to construct extremely unusual mappings that exceed the
-         * data structure limits.
-         * In such a case this function will throw an exception.
-         *
-         * @param type selects the trie type
-         * @param valueWidth selects the number of bits in a trie data value; if smaller than 32 bits,
-         *                   then the values stored in the trie will be truncated first
-         *
-         * @see #fromCodePointMap(CodePointMap)
-         * @stable ICU 63
-         */
+        /// <summary>
+        /// Compacts the data and builds an immutable <see cref="CodePointTrie"/> according to the parameters.
+        /// After this, the mutable trie will be empty.
+        ///
+        /// <p/>The mutable trie stores 32-bit values until <code>buildImmutable()</code> is called.
+        /// If values shorter than 32 bits are to be stored in the immutable trie,
+        /// then the upper bits are discarded.
+        /// For example, when the mutable trie contains values 0x81, -0x7f, and 0xa581,
+        /// and the value width is 8 bits, then each of these is stored as 0x81
+        /// and the immutable trie will return that as an unsigned value.
+        /// (Some implementations may want to make productive temporary use of the upper bits
+        /// until <code>buildImmutable()</code> discards them.)
+        ///
+        /// <p/>Not every possible set of mappings can be built into a <see cref="CodePointTrie"/>,
+        /// because of limitations resulting from speed and space optimizations.
+        /// Every Unicode assigned character can be mapped to a unique value.
+        /// Typical data yields data structures far smaller than the limitations.
+        ///
+        /// <p/>It is possible to construct extremely unusual mappings that exceed the
+        /// data structure limits.
+        /// In such a case this function will throw an exception.
+        /// </summary>
+        /// <param name="type">selects the trie type</param>
+        /// <param name="valueWidth">selects the number of bits in a trie data value; if smaller than 32 bits,
+        ///                   then the values stored in the trie will be truncated first</param>
+        /// <returns>The immutable trie</returns>
+        /// <seealso cref="fromCodePointMap"/>
+        /// <p/> @stable ICU 63
         public CodePointTrie buildImmutable(CodePointTrie.Type? type, CodePointTrie.ValueWidth? valueWidth)
         {
             if (type == null || valueWidth == null)
@@ -916,9 +899,9 @@ namespace CodeHive.unicode_trie
             private int length;
             private int mostRecent;
 
-            private int[] indexes   = new int[CAPACITY];
-            private int[] values    = new int[CAPACITY];
-            private int[] refCounts = new int[CAPACITY];
+            private readonly int[] indexes   = new int[CAPACITY];
+            private readonly int[] values    = new int[CAPACITY];
+            private readonly int[] refCounts = new int[CAPACITY];
         }
 
         // Custom hash table for mixed-value blocks to be found anywhere in the
