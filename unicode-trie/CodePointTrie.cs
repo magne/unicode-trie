@@ -824,16 +824,16 @@ namespace CodeHive.unicode_trie
         /** @internal */
         private readonly char[] index;
 
-        /// <remarks>This API is ICU internal only.</remarks>
+        /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete] protected readonly Data data;
 
-        /// <remarks>This API is ICU internal only.</remarks>
+        /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete] protected readonly int dataLength;
 
         /**
          * Start of the last range which ends at U+10FFFF.
          */
-        /// <remarks>This API is ICU internal only.</remarks>
+        /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete] protected readonly int highStart;
 
         /**
@@ -853,14 +853,14 @@ namespace CodeHive.unicode_trie
         /** @internal */
         private readonly int nullValue;
 
-        /// <remarks>This API is ICU internal only.</remarks>
+        /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete]
         protected int fastIndex(int c)
         {
             return index[c >> FAST_SHIFT] + (c & FAST_DATA_MASK);
         }
 
-        /// <remarks>This API is ICU internal only.</remarks>
+        /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete]
         protected int smallIndex(Type type, int c)
         {
@@ -909,7 +909,7 @@ namespace CodeHive.unicode_trie
             return dataBlock + (c & SMALL_DATA_MASK);
         }
 
-        /// <remarks>This API is ICU internal only.</remarks>
+        /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete]
         protected abstract int cpIndex(int c);
 
@@ -965,7 +965,7 @@ namespace CodeHive.unicode_trie
             /// <p/> @stable ICU 63
             public abstract int suppGet(int c);
 
-            /// <remarks>This API is ICU internal only.</remarks>
+            /// <remarks>@internal This API is ICU internal only.</remarks>
             [Obsolete]
             protected override int cpIndex(int c)
             {
@@ -1104,7 +1104,7 @@ namespace CodeHive.unicode_trie
                 return Type.SMALL;
             }
 
-            /// <remarks>This API is ICU internal only.</remarks>
+            /// <remarks>@internal This API is ICU internal only.</remarks>
             [Obsolete]
             protected override int cpIndex(int c)
             {

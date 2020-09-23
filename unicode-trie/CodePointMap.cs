@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CodeHive.unicode_trie.java;
 
@@ -12,7 +14,7 @@ namespace CodeHive.unicode_trie
     /// This does not implement <see cref="System.Collections.IDictionary"/>.
     /// </summary>
     /// <p/> @stable ICU 63
-    public abstract class CodePointMap : Iterable<CodePointMap.Range>
+    public abstract class CodePointMap : IEnumerable<CodePointMap.Range>
     {
         /// <summary>
         /// Selectors for how getRange() should report value ranges overlapping with surrogates.
@@ -77,7 +79,7 @@ namespace CodeHive.unicode_trie
         /// return a value index computed from the map value, etc.
         ///
         /// <seealso cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
-        /// <seealso cref="CodePointMap.iterator()"/>
+        /// <seealso cref="CodePointMap.GetEnumerator()"/>
         /// </summary>
         /// <p/> @stable ICU 63
         public interface ValueFilter
@@ -98,7 +100,7 @@ namespace CodeHive.unicode_trie
         /// or it may be the surrogateValue if a RangeOption other than "normal" was used.
         ///
         /// <seealso cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
-        /// <seealso cref="CodePointMap.iterator()"/>
+        /// <seealso cref="CodePointMap.GetEnumerator()"/>
         /// </summary>
         /// <p/> @stable ICU 63
         public class Range
@@ -139,7 +141,7 @@ namespace CodeHive.unicode_trie
             }
 
             /// <summary>
-            /// Sets the range. When using <see cref="CodePointMap.iterator"/>,
+            /// Sets the range. When using <see cref="CodePointMap.GetEnumerator()"/>,
             /// iteration will resume after the newly set end.
             /// </summary>
             /// <param name="start">new start code point</param>
@@ -155,42 +157,9 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        private class RangeIterator : Iterator<Range>
-        {
-            private readonly Range        range = new Range();
-            private readonly CodePointMap codePointMap;
-
-            internal RangeIterator(CodePointMap codePointMap)
-            {
-                this.codePointMap = codePointMap;
-            }
-
-            public bool hasNext()
-            {
-                return -1 <= range.end && range.end < 0x10ffff;
-            }
-
-            public Range next()
-            {
-                if (codePointMap.getRange(range.end + 1, null, range))
-                {
-                    return range;
-                }
-                else
-                {
-                    throw new NoSuchElementException();
-                }
-            }
-
-            public void remove()
-            {
-                throw new UnsupportedOperationException();
-            }
-        }
-
         /// <summary>
         ///  Iterates over code points of a string and fetches map values.
-        /// This does not implement <see cref="Iterator{E}"/>.
+        /// This does not implement <see cref="IEnumerable{T}"/>.
         /// <code>
         /// void onString(CodePointMap map, CharSequence s, int start) {
         ///     CodePointMap.StringIterator iter = map.stringIterator(s, start);
@@ -390,7 +359,6 @@ namespace CodeHive.unicode_trie
         public bool getRange(int start, RangeOption option, int surrogateValue,
                              ValueFilter filter, Range range)
         {
-            assert(option != null);
             if (!getRange(start, filter, range))
             {
                 return false;
@@ -452,22 +420,36 @@ namespace CodeHive.unicode_trie
         }
 
         /// <summary>
-        /// Convenience iterator over same-map-value code point ranges.
-        /// Same as looping over all ranges with {@link #getRange(int, ValueFilter, Range)}
-        /// without filtering.
-        /// Adjacent ranges have different map values.
-        ///
-        /// <p/>The iterator always returns the same Range object.
+        /// Enumerator over <see cref="Range"/>.
         /// </summary>
-        /// <returns>a <see cref="Range"/> iterator</returns>
-        /// <p/> @stable ICU 63
-        public Iterator<Range> iterator()
+        /// <returns>Enumerator over <see cref="Range"/>.</returns>
+        /// <seealso cref="GetEnumerator()"/>
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return new RangeIterator(this);
+            return GetEnumerator();
         }
 
         /// <summary>
-        /// Returns an iterator (not a <see cref="Iterator{E}"/>) over code points of a string
+        /// Convenience enumerator over same-map-value code point ranges.
+        /// Same as looping over all ranges with <see cref="getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+        /// without filtering.
+        /// Adjacent ranges have different map values.
+        ///
+        /// <p/>The enumerator always returns te same range object.
+        /// </summary>
+        /// <returns>An enumerator over <see cref="Range"/></returns>
+        public IEnumerator<Range> GetEnumerator()
+        {
+            var range = new Range();
+
+            while (-1 <= range.end && range.end < 0x10ffff && getRange(range.end + 1, null, range))
+            {
+                yield return range;
+            }
+        }
+
+        /// <summary>
+        /// Returns an iterator (not a <see cref="IEnumerable{T}"/>) over code points of a string
         /// for fetching map values.
         /// </summary>
         /// <param name="s">string to iterate over</param>
