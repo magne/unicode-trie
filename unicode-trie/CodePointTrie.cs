@@ -3,8 +3,6 @@ using System.IO;
 using CodeHive.unicode_trie.icu;
 using CodeHive.unicode_trie.java;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable InvalidXmlDocComment
 #pragma warning disable 612
 
 namespace CodeHive.unicode_trie
@@ -17,21 +15,19 @@ namespace CodeHive.unicode_trie
     /// <p/>This class is not intended for public subclassing.
     /// </summary>
     /// <seealso cref="MutableCodePointTrie"/>
-    /// <p/> @stable ICU 63
     public abstract class CodePointTrie : CodePointMap
     {
         /// <summary>
-        /// Selectors for the type of a CodePointTrie.
+        /// Selectors for the kind of a CodePointTrie.
         /// Different trade-offs for size vs. speed.
         ///
-        /// <p/>Use null for <see cref="CodePointTrie.fromBinary"/> to accept any type;
-        /// <see cref="CodePointTrie.getType"/> will return the actual type.
+        /// <p/>Use null for <see cref="CodePointTrie.FromBinary"/> to accept any kind;
+        /// <see cref="CodePointTrie.GetKind"/> will return the actual kind.
         /// </summary>
-        /// <seealso cref="MutableCodePointTrie.buildImmutable"/>
-        /// <seealso cref="CodePointTrie.fromBinary"/>
-        /// <seealso cref="CodePointTrie.getType"/>
-        /// <p/> @stable ICU 63
-        public enum Type
+        /// <seealso cref="MutableCodePointTrie.BuildImmutable"/>
+        /// <seealso cref="CodePointTrie.FromBinary"/>
+        /// <seealso cref="CodePointTrie.GetKind"/>
+        public enum Kind
         {
             /// <summary>
             /// Fast/simple/larger BMP data structure.
@@ -39,45 +35,39 @@ namespace CodeHive.unicode_trie
             /// and supplementary code points.
             /// </summary>
             /// <seealso cref="CodePointTrie.Fast"/>
-            /// <p/> @stable ICU 63
-            FAST,
+            Fast,
 
             /// <summary>
             /// Small/slower BMP data structure.
             /// </summary>
             /// <seealso cref="CodePointTrie.Small"/>
-            /// <p/> @stable ICU 63
-            SMALL
+            Small
         }
 
         /// <summary>
         /// Selectors for the number of bits in a CodePointTrie data value.
         ///
-        /// <p/>Use null for <see cref="CodePointTrie.fromBinary"/> to accept any data value width;
-        /// <see cref="CodePointTrie.getValueWidth"/> will return the actual data value width.
+        /// <p/>Use null for <see cref="CodePointTrie.FromBinary"/> to accept any data value width;
+        /// <see cref="CodePointTrie.GetValueWidth"/> will return the actual data value width.
         /// </summary>
-        /// <p/> @stable ICU 63
         public enum ValueWidth
         {
             /// <summary>
             /// The trie stores 16 bits per data value.
-            /// It returns them as unsigned values 0..0xffff=65535.
+            /// It returns them as unsigned values 0..0xFFFF=65535.
             /// </summary>
-            /// <p/> @stable ICU 63
-            BITS_16,
+            Bits16,
 
             /// <summary>
             /// The trie stores 32 bits per data value.
             /// </summary>
-            /// <p/> @stable ICU 63
-            BITS_32,
+            Bits32,
 
             /// <summary>
             /// The trie stores 8 bits per data value.
             /// It returns them as unsigned values 0..0xff=255.
             /// </summary>
-            /// <p/> @stable ICU 63
-            BITS_8
+            Bits8
         }
 
         private CodePointTrie(char[] index, Data data, int highStart,
@@ -86,14 +76,14 @@ namespace CodeHive.unicode_trie
             this.ascii = new int[ASCII_LIMIT];
             this.index = index;
             this.data = data;
-            this.dataLength = data.getDataLength();
+            this.dataLength = data.GetDataLength();
             this.highStart = highStart;
             this.index3NullOffset = index3NullOffset;
             this.dataNullOffset = dataNullOffset;
 
             for (int c = 0; c < ASCII_LIMIT; ++c)
             {
-                ascii[c] = data.getFromIndex(c);
+                ascii[c] = data.GetFromIndex(c);
             }
 
             int nullValueOffset = dataNullOffset;
@@ -102,31 +92,30 @@ namespace CodeHive.unicode_trie
                 nullValueOffset = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
             }
 
-            nullValue = data.getFromIndex(nullValueOffset);
+            nullValue = data.GetFromIndex(nullValueOffset);
         }
 
         /// <summary>
         /// Creates a trie from its binary form,
         /// stored in the ByteBuffer starting at the current position.
         /// Advances the buffer position to just after the trie data.
-        /// Inverse of <see cref="toBinary"/>.
+        /// Inverse of <see cref="ToBinary"/>.
         ///
-        /// <p>The data is copied from the buffer;
+        /// <p/>The data is copied from the buffer;
         /// later modification of the buffer will not affect the trie.
         /// </summary>
-        /// <param name="type">selects the trie type; this method throws an exception
-        ///             if the type does not match the binary data;
-        ///             use null to accept any type</param>
+        /// <param name="type">selects the trie kind; this method throws an exception
+        ///             if the kind does not match the binary data;
+        ///             use null to accept any kind</param>
         /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
         ///                  if the valueWidth does not match the binary data;
         ///                  use null to accept any data value width</param>
         /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
         /// <returns>the trie</returns>
         /// <seealso cref="MutableCodePointTrie"/>
-        /// <seealso cref="MutableCodePointTrie.buildImmutable"/>
-        /// <seealso cref="toBinary"/>
-        /// <p/> @stable ICU 63
-        public static CodePointTrie fromBinary(Type? type, ValueWidth? valueWidth, ByteBuffer bytes)
+        /// <seealso cref="MutableCodePointTrie.BuildImmutable"/>
+        /// <seealso cref="ToBinary"/>
+        public static CodePointTrie FromBinary(Kind? type, ValueWidth? valueWidth, ByteBuffer bytes)
         {
             ByteOrder outerByteOrder = bytes.order();
             try
@@ -138,7 +127,7 @@ namespace CodeHive.unicode_trie
                 }
 
                 // struct UCPTrieHeader
-                /** "Tri3" in big-endian US-ASCII (0x54726933) */
+                /* "Tri3" in big-endian US-ASCII (0x54726933) */
                 int signature = bytes.getInt();
 
                 // Check the signature.
@@ -159,7 +148,7 @@ namespace CodeHive.unicode_trie
                 }
 
                 // struct UCPTrieHeader continued
-                /**
+                /*
                  * Options bit field:
                  * Bits 15..12: Data length bits 19..16.
                  * Bits 11..8: Data null block offset bits 19..16.
@@ -169,19 +158,19 @@ namespace CodeHive.unicode_trie
                  */
                 int options = bytes.getChar();
 
-                /** Total length of the index tables. */
+                /* Total length of the index tables. */
                 int indexLength = bytes.getChar();
 
-                /** Data length bits 15..0. */
+                /* Data length bits 15..0. */
                 int dataLength = bytes.getChar();
 
-                /** Index-3 null block offset, 0x7fff or 0xffff if none. */
+                /* Index-3 null block offset, 0x7fff or 0xFFFF if none. */
                 int index3NullOffset = bytes.getChar();
 
-                /** Data null block offset bits 15..0, 0xfffff if none. */
+                /* Data null block offset bits 15..0, 0xFFFFf if none. */
                 int dataNullOffset = bytes.getChar();
 
-                /**
+                /*
                  * First code point of the single-value range ending with U+10ffff,
                  * rounded up and then shifted right by SHIFT_2.
                  */
@@ -189,17 +178,17 @@ namespace CodeHive.unicode_trie
                 // struct UCPTrieHeader end
 
                 int typeInt = (options >> 6) & 3;
-                Type actualType;
+                Kind actualKind;
                 switch (typeInt)
                 {
                     case 0:
-                        actualType = Type.FAST;
+                        actualKind = Kind.Fast;
                         break;
                     case 1:
-                        actualType = Type.SMALL;
+                        actualKind = Kind.Small;
                         break;
                     default:
-                        throw new ICUUncheckedIOException("CodePointTrie data header has an unsupported type");
+                        throw new ICUUncheckedIOException("CodePointTrie data header has an unsupported kind");
                 }
 
                 int valueWidthInt = options & OPTIONS_VALUE_BITS_MASK;
@@ -207,13 +196,13 @@ namespace CodeHive.unicode_trie
                 switch (valueWidthInt)
                 {
                     case 0:
-                        actualValueWidth = ValueWidth.BITS_16;
+                        actualValueWidth = ValueWidth.Bits16;
                         break;
                     case 1:
-                        actualValueWidth = ValueWidth.BITS_32;
+                        actualValueWidth = ValueWidth.Bits32;
                         break;
                     case 2:
-                        actualValueWidth = ValueWidth.BITS_8;
+                        actualValueWidth = ValueWidth.Bits8;
                         break;
                     default:
                         throw new ICUUncheckedIOException("CodePointTrie data header has an unsupported value width");
@@ -226,7 +215,7 @@ namespace CodeHive.unicode_trie
 
                 if (type == null)
                 {
-                    type = actualType;
+                    type = actualKind;
                 }
 
                 if (valueWidth == null)
@@ -234,9 +223,9 @@ namespace CodeHive.unicode_trie
                     valueWidth = actualValueWidth;
                 }
 
-                if (type != actualType || valueWidth != actualValueWidth)
+                if (type != actualKind || valueWidth != actualValueWidth)
                 {
-                    throw new ICUUncheckedIOException("CodePointTrie data header has a different type or value width than required");
+                    throw new ICUUncheckedIOException("CodePointTrie data header has a different kind or value width than required");
                 }
 
                 // Get the length values and offsets.
@@ -247,11 +236,11 @@ namespace CodeHive.unicode_trie
 
                 // Calculate the actual length, minus the header.
                 int actualLength = indexLength * 2;
-                if (valueWidth == ValueWidth.BITS_16)
+                if (valueWidth == ValueWidth.Bits16)
                 {
                     actualLength += dataLength * 2;
                 }
-                else if (valueWidth == ValueWidth.BITS_32)
+                else if (valueWidth == ValueWidth.Bits32)
                 {
                     actualLength += dataLength * 4;
                 }
@@ -268,24 +257,24 @@ namespace CodeHive.unicode_trie
                 char[] index = ICUBinary.getChars(bytes, indexLength, 0);
                 switch (valueWidth)
                 {
-                    case ValueWidth.BITS_16:
+                    case ValueWidth.Bits16:
                     {
                         char[] data16 = ICUBinary.getChars(bytes, dataLength, 0);
-                        return type == Type.FAST
+                        return type == Kind.Fast
                             ? (CodePointTrie) new Fast16(index, data16, highStart, index3NullOffset, dataNullOffset)
                             : new Small16(index, data16, highStart, index3NullOffset, dataNullOffset);
                     }
-                    case ValueWidth.BITS_32:
+                    case ValueWidth.Bits32:
                     {
                         int[] data32 = ICUBinary.getInts(bytes, dataLength, 0);
-                        return type == Type.FAST
+                        return type == Kind.Fast
                             ? (CodePointTrie) new Fast32(index, data32, highStart, index3NullOffset, dataNullOffset)
                             : new Small32(index, data32, highStart, index3NullOffset, dataNullOffset);
                     }
-                    case ValueWidth.BITS_8:
+                    case ValueWidth.Bits8:
                     {
                         byte[] data8 = ICUBinary.getBytes(bytes, dataLength, 0);
-                        return type == Type.FAST
+                        return type == Kind.Fast
                             ? (CodePointTrie) new Fast8(index, data8, highStart, index3NullOffset, dataNullOffset)
                             : new Small8(index, data8, highStart, index3NullOffset, dataNullOffset);
                     }
@@ -300,27 +289,24 @@ namespace CodeHive.unicode_trie
         }
 
         /// <summary>
-        /// Returns the trie type.
+        /// Returns the trie kind.
         /// </summary>
-        /// <returns>the trie type</returns>
-        /// <p/> @stable ICU 63
-        public abstract Type getType();
+        /// <returns>the trie kind</returns>
+        public abstract Kind GetKind();
 
         /// <summary>
         /// Returns the number of bits in a trie data value.
         /// </summary>
         /// <returns>the number of bits in a trie data value</returns>
-        /// <p/> @stable ICU 63
-        public ValueWidth getValueWidth()
+        public ValueWidth GetValueWidth()
         {
-            return data.getValueWidth();
+            return data.GetValueWidth();
         }
 
         /// <inheritdoc />
-        /// <p/> @stable ICU 63
-        public override int get(int c)
+        public override int Get(int c)
         {
-            return data.getFromIndex(cpIndex(c));
+            return data.GetFromIndex(cpIndex(c));
         }
 
         /// <summary>
@@ -328,8 +314,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         /// <param name="c">the input code point; must be U+0000..U+007F</param>
         /// <returns>The ASCII code point's trie value</returns>
-        /// <p/> @stable ICU 63
-        public int asciiGet(int c)
+        public int AsciiGet(int c)
         {
             return ascii[c];
         }
@@ -338,8 +323,8 @@ namespace CodeHive.unicode_trie
 
         private static readonly int ASCII_LIMIT = 0x80;
 
-        private static int maybeFilterValue(int value, int trieNullValue, int nullValue,
-                                            ValueFilter filter)
+        private static int MaybeFilterValue(int value, int trieNullValue, int nullValue,
+                                            IValueFilter filter)
         {
             if (value == trieNullValue)
             {
@@ -347,15 +332,14 @@ namespace CodeHive.unicode_trie
             }
             else if (filter != null)
             {
-                value = filter.apply(value);
+                value = filter.Apply(value);
             }
 
             return value;
         }
 
         /// <inheritdoc />
-        /// <p/> @stable ICU 63
-        public override bool getRange(int start, ValueFilter filter, Range range)
+        public override bool GetRange(int start, IValueFilter filter, Range range)
         {
             if (start < 0 || MAX_UNICODE < start)
             {
@@ -365,13 +349,13 @@ namespace CodeHive.unicode_trie
             if (start >= highStart)
             {
                 int _di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
-                int _value = data.getFromIndex(_di);
+                int _value = data.GetFromIndex(_di);
                 if (filter != null)
                 {
-                    _value = filter.apply(_value);
+                    _value = filter.Apply(_value);
                 }
 
-                range.set(start, MAX_UNICODE, _value);
+                range.Set(start, MAX_UNICODE, _value);
                 return true;
             }
 
@@ -379,10 +363,10 @@ namespace CodeHive.unicode_trie
             int nullValue = this.nullValue;
             if (filter != null)
             {
-                nullValue = filter.apply(nullValue);
+                nullValue = filter.Apply(nullValue);
             }
 
-            Type type = getType();
+            Kind kind = GetKind();
 
             int prevI3Block = -1;
             int prevBlock = -1;
@@ -396,34 +380,34 @@ namespace CodeHive.unicode_trie
                 int i3;
                 int i3BlockLength;
                 int dataBlockLength;
-                if (c <= 0xffff && (type == Type.FAST || c <= SMALL_MAX))
+                if (c <= 0xFFFF && (kind == Kind.Fast || c <= SMALL_MAX))
                 {
                     i3Block = 0;
                     i3 = c >> FAST_SHIFT;
-                    i3BlockLength = type == Type.FAST ? BMP_INDEX_LENGTH : SMALL_INDEX_LENGTH;
+                    i3BlockLength = kind == Kind.Fast ? BMP_INDEX_LENGTH : SMALL_INDEX_LENGTH;
                     dataBlockLength = FAST_DATA_BLOCK_LENGTH;
                 }
                 else
                 {
                     // Use the multi-stage index.
                     int i1 = c >> SHIFT_1;
-                    if (type == Type.FAST)
+                    if (kind == Kind.Fast)
                     {
-                        assert(0xffff < c && c < highStart);
+                        Assert(0xFFFF < c && c < highStart);
                         i1 += BMP_INDEX_LENGTH - OMITTED_BMP_INDEX_1_LENGTH;
                     }
                     else
                     {
-                        assert(c < highStart && highStart > SMALL_LIMIT);
+                        Assert(c < highStart && highStart > SMALL_LIMIT);
                         i1 += SMALL_INDEX_LENGTH;
                     }
 
                     i3Block = index[index[i1] + ((c >> SHIFT_2) & INDEX_2_MASK)];
-                    if (i3Block == prevI3Block && (c - start) >= CP_PER_INDEX_2_ENTRY)
+                    if (i3Block == prevI3Block && (c - start) >= CP_PRE_INDEX_2_ENTRY)
                     {
                         // The index-3 block is the same as the previous one, and filled with value.
-                        assert((c & (CP_PER_INDEX_2_ENTRY - 1)) == 0);
-                        c += CP_PER_INDEX_2_ENTRY;
+                        Assert((c & (CP_PRE_INDEX_2_ENTRY - 1)) == 0);
+                        c += CP_PRE_INDEX_2_ENTRY;
                         continue;
                     }
 
@@ -435,7 +419,7 @@ namespace CodeHive.unicode_trie
                         {
                             if (nullValue != value)
                             {
-                                range.set(start, c - 1, value);
+                                range.Set(start, c - 1, value);
                                 return true;
                             }
                         }
@@ -447,7 +431,7 @@ namespace CodeHive.unicode_trie
                         }
 
                         prevBlock = dataNullOffset;
-                        c = (c + CP_PER_INDEX_2_ENTRY) & ~(CP_PER_INDEX_2_ENTRY - 1);
+                        c = (c + CP_PRE_INDEX_2_ENTRY) & ~(CP_PRE_INDEX_2_ENTRY - 1);
                         continue;
                     }
 
@@ -476,7 +460,7 @@ namespace CodeHive.unicode_trie
                     if (block == prevBlock && (c - start) >= dataBlockLength)
                     {
                         // The block is the same as the previous one, and filled with value.
-                        assert((c & (dataBlockLength - 1)) == 0);
+                        Assert((c & (dataBlockLength - 1)) == 0);
                         c += dataBlockLength;
                     }
                     else
@@ -490,7 +474,7 @@ namespace CodeHive.unicode_trie
                             {
                                 if (nullValue != value)
                                 {
-                                    range.set(start, c - 1, value);
+                                    range.Set(start, c - 1, value);
                                     return true;
                                 }
                             }
@@ -506,16 +490,16 @@ namespace CodeHive.unicode_trie
                         else
                         {
                             int _di = block + (c & dataMask);
-                            int trieValue2 = data.getFromIndex(_di);
+                            int trieValue2 = data.GetFromIndex(_di);
                             if (haveValue)
                             {
                                 if (trieValue2 != trieValue)
                                 {
                                     if (filter == null ||
-                                        maybeFilterValue(trieValue2, this.nullValue, nullValue,
+                                        MaybeFilterValue(trieValue2, this.nullValue, nullValue,
                                             filter) != value)
                                     {
-                                        range.set(start, c - 1, value);
+                                        range.Set(start, c - 1, value);
                                         return true;
                                     }
 
@@ -525,20 +509,20 @@ namespace CodeHive.unicode_trie
                             else
                             {
                                 trieValue = trieValue2;
-                                value = maybeFilterValue(trieValue2, this.nullValue, nullValue, filter);
+                                value = MaybeFilterValue(trieValue2, this.nullValue, nullValue, filter);
                                 haveValue = true;
                             }
 
                             while ((++c & dataMask) != 0)
                             {
-                                trieValue2 = data.getFromIndex(++_di);
+                                trieValue2 = data.GetFromIndex(++_di);
                                 if (trieValue2 != trieValue)
                                 {
                                     if (filter == null ||
-                                        maybeFilterValue(trieValue2, this.nullValue, nullValue,
+                                        MaybeFilterValue(trieValue2, this.nullValue, nullValue,
                                             filter) != value)
                                     {
-                                        range.set(start, c - 1, value);
+                                        range.Set(start, c - 1, value);
                                         return true;
                                     }
 
@@ -550,10 +534,10 @@ namespace CodeHive.unicode_trie
                 } while (++i3 < i3BlockLength);
             } while (c < highStart);
 
-            assert(haveValue);
+            Assert(haveValue);
             int di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
-            int highValue = data.getFromIndex(di);
-            if (maybeFilterValue(highValue, this.nullValue, nullValue, filter) != value)
+            int highValue = data.GetFromIndex(di);
+            if (MaybeFilterValue(highValue, this.nullValue, nullValue, filter) != value)
             {
                 --c;
             }
@@ -562,18 +546,17 @@ namespace CodeHive.unicode_trie
                 c = MAX_UNICODE;
             }
 
-            range.set(start, c, value);
+            range.Set(start, c, value);
             return true;
         }
 
         /// <summary>
         /// Writes a representation of the trie to the output stream.
-        /// * Inverse of <see cref="fromBinary"/>.
+        /// * Inverse of <see cref="FromBinary"/>.
         /// </summary>
         /// <param name="os">the output stream</param>
         /// <returns>the number of bytes written</returns>
-        /// <p/> @stable ICU 63
-        public int toBinary(Stream os)
+        public int ToBinary(Stream os)
         {
             try
             {
@@ -584,8 +567,8 @@ namespace CodeHive.unicode_trie
                 dos.writeChar( // options
                     ((dataLength & 0xf0000) >> 4) |
                     ((dataNullOffset & 0xf0000) >> 8) |
-                    ((int) getType() << 6) |
-                    (int) getValueWidth());
+                    ((int) GetKind() << 6) |
+                    (int) GetValueWidth());
                 dos.writeChar(index.Length);
                 dos.writeChar(dataLength);
                 dos.writeChar(index3NullOffset);
@@ -599,7 +582,7 @@ namespace CodeHive.unicode_trie
                 }
 
                 length += index.Length * 2;
-                length += data.write(dos);
+                length += data.Write(dos);
                 return length;
             }
             catch (IOException e)
@@ -609,7 +592,7 @@ namespace CodeHive.unicode_trie
         }
 
         /** @internal */
-        internal static readonly int FAST_SHIFT = 6;
+        internal const int FAST_SHIFT = 6;
 
         /** Number of entries in a data block for code points below the fast limit. 64=0x40 @internal */
         internal static readonly int FAST_DATA_BLOCK_LENGTH = 1 << FAST_SHIFT;
@@ -639,8 +622,8 @@ namespace CodeHive.unicode_trie
         /** The length of the BMP index table. 1024=0x400 */
         private static readonly int BMP_INDEX_LENGTH = 0x10000 >> FAST_SHIFT;
 
-        internal static readonly         int SMALL_LIMIT        = 0x1000;
-        private static readonly int SMALL_INDEX_LENGTH = SMALL_LIMIT >> FAST_SHIFT;
+        internal static readonly int SMALL_LIMIT        = 0x1000;
+        private static readonly  int SMALL_INDEX_LENGTH = SMALL_LIMIT >> FAST_SHIFT;
 
         /** Shift size for getting the index-3 table offset. */
         internal static readonly int SHIFT_3 = 4;
@@ -676,7 +659,7 @@ namespace CodeHive.unicode_trie
         internal static readonly int INDEX_2_MASK = INDEX_2_BLOCK_LENGTH - 1;
 
         /** Number of code points per index-2 table entry. 512=0x200 */
-        internal static readonly int CP_PER_INDEX_2_ENTRY = 1 << SHIFT_2;
+        internal static readonly int CP_PRE_INDEX_2_ENTRY = 1 << SHIFT_2;
 
         /** Number of entries in an index-3 block. 32=0x20 */
         internal static readonly int INDEX_3_BLOCK_LENGTH = 1 << SHIFT_2_3;
@@ -701,16 +684,16 @@ namespace CodeHive.unicode_trie
          * Bit 15 is unused for this value because this bit is used if the index-3 contains
          * 18-bit indexes.
          */
-        internal static readonly int NO_INDEX3_NULL_OFFSET = 0x7fff;
+        internal const int NO_INDEX_3_NULL_OFFSET = 0x7fff;
 
-        internal static readonly int NO_DATA_NULL_OFFSET = 0xfffff;
+        internal const int NO_DATA_NULL_OFFSET = 0xFFFFf;
 
         public abstract class Data
         {
-            internal abstract ValueWidth getValueWidth();
-            internal abstract int getDataLength();
-            internal abstract int getFromIndex(int index);
-            internal abstract int write(DataOutputStream dos);
+            internal abstract ValueWidth GetValueWidth();
+            internal abstract int GetDataLength();
+            internal abstract int GetFromIndex(int index);
+            internal abstract int Write(DataOutputStream dos);
         }
 
         private class Data16 : Data
@@ -722,22 +705,22 @@ namespace CodeHive.unicode_trie
                 array = a;
             }
 
-            internal override ValueWidth getValueWidth()
+            internal override ValueWidth GetValueWidth()
             {
-                return ValueWidth.BITS_16;
+                return ValueWidth.Bits16;
             }
 
-            internal override int getDataLength()
+            internal override int GetDataLength()
             {
                 return array.Length;
             }
 
-            internal override int getFromIndex(int index)
+            internal override int GetFromIndex(int index)
             {
                 return array[index];
             }
 
-            internal override int write(DataOutputStream dos)
+            internal override int Write(DataOutputStream dos)
             {
                 foreach (char v in array)
                 {
@@ -757,22 +740,22 @@ namespace CodeHive.unicode_trie
                 array = a;
             }
 
-            internal override ValueWidth getValueWidth()
+            internal override ValueWidth GetValueWidth()
             {
-                return ValueWidth.BITS_32;
+                return ValueWidth.Bits32;
             }
 
-            internal override int getDataLength()
+            internal override int GetDataLength()
             {
                 return array.Length;
             }
 
-            internal override int getFromIndex(int index)
+            internal override int GetFromIndex(int index)
             {
                 return array[index];
             }
 
-            internal override int write(DataOutputStream dos)
+            internal override int Write(DataOutputStream dos)
             {
                 foreach (int v in array)
                 {
@@ -792,22 +775,22 @@ namespace CodeHive.unicode_trie
                 array = a;
             }
 
-            internal override ValueWidth getValueWidth()
+            internal override ValueWidth GetValueWidth()
             {
-                return ValueWidth.BITS_8;
+                return ValueWidth.Bits8;
             }
 
-            internal override int getDataLength()
+            internal override int GetDataLength()
             {
                 return array.Length;
             }
 
-            internal override int getFromIndex(int index)
+            internal override int GetFromIndex(int index)
             {
                 return array[index] & 0xff;
             }
 
-            internal override int write(DataOutputStream dos)
+            internal override int Write(DataOutputStream dos)
             {
                 foreach (byte v in array)
                 {
@@ -838,14 +821,14 @@ namespace CodeHive.unicode_trie
 
         /**
          * Internal index-3 null block offset.
-         * Set to an impossibly high value (e.g., 0xffff) if there is no dedicated index-3 null block.
+         * Set to an impossibly high value (e.g., 0xFFFF) if there is no dedicated index-3 null block.
          * @internal
          */
         private readonly int index3NullOffset;
 
         /**
          * Internal data null block offset, not shifted.
-         * Set to an impossibly high value (e.g., 0xfffff) if there is no dedicated data null block.
+         * Set to an impossibly high value (e.g., 0xFFFFf) if there is no dedicated data null block.
          * @internal
          */
         private readonly int dataNullOffset;
@@ -855,14 +838,14 @@ namespace CodeHive.unicode_trie
 
         /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete]
-        protected int fastIndex(int c)
+        protected int FastIndex(int c)
         {
             return index[c >> FAST_SHIFT] + (c & FAST_DATA_MASK);
         }
 
         /// <remarks>@internal This API is ICU internal only.</remarks>
         [Obsolete]
-        protected int smallIndex(Type type, int c)
+        protected int SmallIndex(Kind kind, int c)
         {
             // Split into two methods to make this part inline-friendly.
             // In C, this part is a macro.
@@ -871,20 +854,20 @@ namespace CodeHive.unicode_trie
                 return dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
             }
 
-            return internalSmallIndex(type, c);
+            return InternalSmallIndex(kind, c);
         }
 
-        private int internalSmallIndex(Type type, int c)
+        private int InternalSmallIndex(Kind kind, int c)
         {
             int i1 = c >> SHIFT_1;
-            if (type == Type.FAST)
+            if (kind == Kind.Fast)
             {
-                assert(0xffff < c && c < highStart);
+                Assert(0xFFFF < c && c < highStart);
                 i1 += BMP_INDEX_LENGTH - OMITTED_BMP_INDEX_1_LENGTH;
             }
             else
             {
-                assert(0 <= c && c < highStart && highStart > SMALL_LIMIT);
+                Assert(0 <= c && c < highStart && highStart > SMALL_LIMIT);
                 i1 += SMALL_INDEX_LENGTH;
             }
 
@@ -914,9 +897,8 @@ namespace CodeHive.unicode_trie
         protected abstract int cpIndex(int c);
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointMap.Type.FAST"/>
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Fast"/>
         /// </summary>
-        /// <p/> @stable ICU 63
         public abstract class Fast : CodePointTrie
         {
             internal Fast(char[] index, Data data, int highStart,
@@ -926,24 +908,22 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with type <see cref="CodePointTrie.Type.FAST"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with kind <see cref="CodePointTrie.Kind.Fast"/>.
             /// </summary>
             /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
             ///                  if the valueWidth does not match the binary data;
             ///                  use null to accept any data value width</param>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Fast fromBinary(ValueWidth valueWidth, ByteBuffer bytes)
+            public static Fast FromBinary(ValueWidth valueWidth, ByteBuffer bytes)
             {
-                return (Fast) CodePointTrie.fromBinary(Type.FAST, valueWidth, bytes);
+                return (Fast) CodePointTrie.FromBinary(Kind.Fast, valueWidth, bytes);
             }
 
-            /// <returns><see cref="Type.FAST"/></returns>
-            /// <p/> @stable ICU 63
-            public override Type getType()
+            /// <returns><see cref="CodePointTrie.Kind.Fast"/></returns>
+            public override Kind GetKind()
             {
-                return Type.FAST;
+                return Kind.Fast;
             }
 
             /// <summary>
@@ -953,8 +933,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="c">the input code point, must be U+0000..U+FFFF</param>
             /// <returns>The BMP code point's trie value.</returns>
-            /// <p/> @stable ICU 63
-            public abstract int bmpGet(int c);
+            public abstract int BmpGet(int c);
 
             /// <summary>
             /// Returns a trie value for a supplementary code point (U+10000..U+10FFFF),
@@ -962,8 +941,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="c">the input code point, must be U+10000..U+10FFFF</param>
             /// <returns>The supplementary code point's trie value.</returns>
-            /// <p/> @stable ICU 63
-            public abstract int suppGet(int c);
+            public abstract int SuppGet(int c);
 
             /// <remarks>@internal This API is ICU internal only.</remarks>
             [Obsolete]
@@ -971,13 +949,13 @@ namespace CodeHive.unicode_trie
             {
                 if (c >= 0)
                 {
-                    if (c <= 0xffff)
+                    if (c <= 0xFFFF)
                     {
-                        return fastIndex(c);
+                        return FastIndex(c);
                     }
                     else if (c <= 0x10ffff)
                     {
-                        return smallIndex(Type.FAST, c);
+                        return SmallIndex(Kind.Fast, c);
                     }
                 }
 
@@ -985,8 +963,7 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override StringIterator stringIterator(CharSequence s, int sIndex)
+            public override StringIterator GetStringIterator(CharSequence s, int sIndex)
             {
                 return new FastStringIterator(this, s, sIndex);
             }
@@ -1001,7 +978,7 @@ namespace CodeHive.unicode_trie
                     trie = fast;
                 }
 
-                public override bool next()
+                public override bool Next()
                 {
                     if (sIndex >= s.length())
                     {
@@ -1013,7 +990,7 @@ namespace CodeHive.unicode_trie
                     int dataIndex;
                     if (!Character.isSurrogate(lead))
                     {
-                        dataIndex = trie.fastIndex(c);
+                        dataIndex = trie.FastIndex(c);
                     }
                     else
                     {
@@ -1023,7 +1000,7 @@ namespace CodeHive.unicode_trie
                         {
                             ++sIndex;
                             c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.smallIndex(Type.FAST, c);
+                            dataIndex = trie.SmallIndex(Kind.Fast, c);
                         }
                         else
                         {
@@ -1031,11 +1008,11 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.getFromIndex(dataIndex);
+                    value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
 
-                public override bool previous()
+                public override bool Previous()
                 {
                     if (sIndex <= 0)
                     {
@@ -1047,7 +1024,7 @@ namespace CodeHive.unicode_trie
                     int dataIndex;
                     if (!Character.isSurrogate(trail))
                     {
-                        dataIndex = trie.fastIndex(c);
+                        dataIndex = trie.FastIndex(c);
                     }
                     else
                     {
@@ -1057,7 +1034,7 @@ namespace CodeHive.unicode_trie
                         {
                             --sIndex;
                             c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.smallIndex(Type.FAST, c);
+                            dataIndex = trie.SmallIndex(Kind.Fast, c);
                         }
                         else
                         {
@@ -1065,16 +1042,15 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.getFromIndex(dataIndex);
+                    value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
             }
         }
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/>
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Small"/>
         /// </summary>
-        /// <p/> @stable ICU 63
         public abstract class Small : CodePointTrie
         {
             internal Small(char[] index, Data data, int highStart,
@@ -1084,24 +1060,22 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Small"/>.
             /// </summary>
             /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
             ///                  if the valueWidth does not match the binary data;
             ///                  use null to accept any data value width</param>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Small fromBinary(ValueWidth valueWidth, ByteBuffer bytes)
+            public static Small FromBinary(ValueWidth valueWidth, ByteBuffer bytes)
             {
-                return (Small) CodePointTrie.fromBinary(Type.SMALL, valueWidth, bytes);
+                return (Small) CodePointTrie.FromBinary(Kind.Small, valueWidth, bytes);
             }
 
-            /// <returns><see cref="CodePointTrie.Type.SMALL"/></returns>
-            /// <p/> @stable ICU 63
-            public override Type getType()
+            /// <returns><see cref="CodePointTrie.Kind.Small"/></returns>
+            public override Kind GetKind()
             {
-                return Type.SMALL;
+                return Kind.Small;
             }
 
             /// <remarks>@internal This API is ICU internal only.</remarks>
@@ -1112,11 +1086,11 @@ namespace CodeHive.unicode_trie
                 {
                     if (c <= SMALL_MAX)
                     {
-                        return fastIndex(c);
+                        return FastIndex(c);
                     }
                     else if (c <= 0x10ffff)
                     {
-                        return smallIndex(Type.SMALL, c);
+                        return SmallIndex(Kind.Small, c);
                     }
                 }
 
@@ -1124,8 +1098,7 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override StringIterator stringIterator(CharSequence s, int sIndex)
+            public override StringIterator GetStringIterator(CharSequence s, int sIndex)
             {
                 return new SmallStringIterator(this, s, sIndex);
             }
@@ -1140,7 +1113,7 @@ namespace CodeHive.unicode_trie
                     trie = small;
                 }
 
-                public override bool next()
+                public override bool Next()
                 {
                     if (sIndex >= s.length())
                     {
@@ -1162,7 +1135,7 @@ namespace CodeHive.unicode_trie
                         {
                             ++sIndex;
                             c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.smallIndex(Type.SMALL, c);
+                            dataIndex = trie.SmallIndex(Kind.Small, c);
                         }
                         else
                         {
@@ -1170,11 +1143,11 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.getFromIndex(dataIndex);
+                    value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
 
-                public override bool previous()
+                public override bool Previous()
                 {
                     if (sIndex <= 0)
                     {
@@ -1196,7 +1169,7 @@ namespace CodeHive.unicode_trie
                         {
                             --sIndex;
                             c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.smallIndex(Type.SMALL, c);
+                            dataIndex = trie.SmallIndex(Kind.Small, c);
                         }
                         else
                         {
@@ -1204,17 +1177,16 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.getFromIndex(dataIndex);
+                    value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
             }
         }
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointTrie.Type.FAST"/> and
-        /// <see cref="CodePointTrie.getValueWidth.BITS_16"/>.
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Fast"/> and
+        /// <see cref="CodePointTrie.ValueWidth.Bits16"/>.
         /// </summary>
-        /// <p/> @stable ICU 63
         public class Fast16 : Fast
         {
             private char[] dataArray;
@@ -1228,46 +1200,41 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.FAST"/>
-            /// and <see cref="CodePointTrie.ValueWidth.BITS_16"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Fast"/>
+            /// and <see cref="CodePointTrie.ValueWidth.Bits16"/>.
             /// </summary>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Fast16 fromBinary(ByteBuffer bytes)
+            public static Fast16 FromBinary(ByteBuffer bytes)
             {
-                return (Fast16) CodePointTrie.fromBinary(Type.FAST, ValueWidth.BITS_16, bytes);
+                return (Fast16) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits16, bytes);
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int get(int c)
+            public override int Get(int c)
             {
                 return dataArray[cpIndex(c)];
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int bmpGet(int c)
+            public override int BmpGet(int c)
             {
-                assert(0 <= c && c <= 0xffff);
-                return dataArray[fastIndex(c)];
+                Assert(0 <= c && c <= 0xFFFF);
+                return dataArray[FastIndex(c)];
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int suppGet(int c)
+            public override int SuppGet(int c)
             {
-                assert(0x10000 <= c && c <= 0x10ffff);
-                return dataArray[smallIndex(Type.FAST, c)];
+                Assert(0x10000 <= c && c <= 0x10ffff);
+                return dataArray[SmallIndex(Kind.Fast, c)];
             }
         }
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointTrie.Type.FAST"/> and
-        /// <see cref="CodePointTrie.getValueWidth.BITS_32"/>.
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Fast"/> and
+        /// <see cref="CodePointTrie.ValueWidth.Bits32"/>.
         /// </summary>
-        /// <p/> @stable ICU 63
         public class Fast32 : Fast
         {
             private readonly int[] dataArray;
@@ -1281,46 +1248,41 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.FAST"/>
-            /// and <see cref="CodePointTrie.ValueWidth.BITS_32"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Fast"/>
+            /// and <see cref="CodePointTrie.ValueWidth.Bits32"/>.
             /// </summary>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Fast32 fromBinary(ByteBuffer bytes)
+            public static Fast32 FromBinary(ByteBuffer bytes)
             {
-                return (Fast32) CodePointTrie.fromBinary(Type.FAST, ValueWidth.BITS_32, bytes);
+                return (Fast32) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits32, bytes);
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int get(int c)
+            public override int Get(int c)
             {
                 return dataArray[cpIndex(c)];
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int bmpGet(int c)
+            public override int BmpGet(int c)
             {
-                assert(0 <= c && c <= 0xffff);
-                return dataArray[fastIndex(c)];
+                Assert(0 <= c && c <= 0xFFFF);
+                return dataArray[FastIndex(c)];
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int suppGet(int c)
+            public override int SuppGet(int c)
             {
-                assert(0x10000 <= c && c <= 0x10ffff);
-                return dataArray[smallIndex(Type.FAST, c)];
+                Assert(0x10000 <= c && c <= 0x10ffff);
+                return dataArray[SmallIndex(Kind.Fast, c)];
             }
         }
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointTrie.Type.FAST"/> and
-        /// <see cref="CodePointTrie.getValueWidth.BITS_8"/>.
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Fast"/> and
+        /// <see cref="CodePointTrie.ValueWidth.Bits8"/>.
         /// </summary>
-        /// <p/> @stable ICU 63
         public class Fast8 : Fast
         {
             private readonly byte[] dataArray;
@@ -1334,46 +1296,41 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.FAST"/>
-            /// and <see cref="CodePointTrie.ValueWidth.BITS_8"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Fast"/>
+            /// and <see cref="CodePointTrie.ValueWidth.Bits8"/>.
             /// </summary>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Fast8 fromBinary(ByteBuffer bytes)
+            public static Fast8 FromBinary(ByteBuffer bytes)
             {
-                return (Fast8) CodePointTrie.fromBinary(Type.FAST, ValueWidth.BITS_8, bytes);
+                return (Fast8) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits8, bytes);
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int get(int c)
+            public override int Get(int c)
             {
                 return dataArray[cpIndex(c)] & 0xff;
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int bmpGet(int c)
+            public override int BmpGet(int c)
             {
-                assert(0 <= c && c <= 0xffff);
-                return dataArray[fastIndex(c)] & 0xff;
+                Assert(0 <= c && c <= 0xFFFF);
+                return dataArray[FastIndex(c)] & 0xff;
             }
 
             /// <inheritdoc />
-            /// <p/> @stable ICU 63
-            public override int suppGet(int c)
+            public override int SuppGet(int c)
             {
-                assert(0x10000 <= c && c <= 0x10ffff);
-                return dataArray[smallIndex(Type.FAST, c)] & 0xff;
+                Assert(0x10000 <= c && c <= 0x10ffff);
+                return dataArray[SmallIndex(Kind.Fast, c)] & 0xff;
             }
         }
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/> and
-        /// <see cref="CodePointTrie.getValueWidth.BITS_16"/>.
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Small"/> and
+        /// <see cref="CodePointTrie.ValueWidth.Bits16"/>.
         /// </summary>
-        /// <p/> @stable ICU 63
         public class Small16 : Small
         {
             internal Small16(char[] index, char[] data16, int highStart,
@@ -1383,23 +1340,21 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>
-            /// and <see cref="CodePointTrie.ValueWidth.BITS_16"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Small"/>
+            /// and <see cref="CodePointTrie.ValueWidth.Bits16"/>.
             /// </summary>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Small16 fromBinary(ByteBuffer bytes)
+            public static Small16 FromBinary(ByteBuffer bytes)
             {
-                return (Small16) CodePointTrie.fromBinary(Type.SMALL, ValueWidth.BITS_16, bytes);
+                return (Small16) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits16, bytes);
             }
         }
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/> and
-        /// <see cref="CodePointTrie.getValueWidth.BITS_32"/>.
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Small"/> and
+        /// <see cref="CodePointTrie.ValueWidth.Bits32"/>.
         /// </summary>
-        /// <p/> @stable ICU 63
         public class Small32 : Small
         {
             internal Small32(char[] index, int[] data32, int highStart,
@@ -1409,23 +1364,21 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>
-            /// and <see cref="CodePointTrie.ValueWidth.BITS_32"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Small"/>
+            /// and <see cref="CodePointTrie.ValueWidth.Bits32"/>.
             /// </summary>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Small32 fromBinary(ByteBuffer bytes)
+            public static Small32 FromBinary(ByteBuffer bytes)
             {
-                return (Small32) CodePointTrie.fromBinary(Type.SMALL, ValueWidth.BITS_32, bytes);
+                return (Small32) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits32, bytes);
             }
         }
 
         /// <summary>
-        /// A CodePointTrie with <see cref="CodePointTrie.Type.SMALL"/> and
-        /// <see cref="CodePointTrie.getValueWidth.BITS_8"/>.
+        /// A CodePointTrie with <see cref="CodePointTrie.Kind.Small"/> and
+        /// <see cref="CodePointTrie.ValueWidth.Bits8"/>.
         /// </summary>
-        /// <p/> @stable ICU 63
         public class Small8 : Small
         {
             internal Small8(char[] index, byte[] data8, int highStart,
@@ -1435,15 +1388,14 @@ namespace CodeHive.unicode_trie
 
             /// <summary>
             /// Creates a trie from its binary form.
-            /// Same as <see cref="CodePointTrie.fromBinary"/> with <see cref="CodePointTrie.Type.SMALL"/>
-            /// and <see cref="CodePointTrie.ValueWidth.BITS_8"/>.
+            /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Small"/>
+            /// and <see cref="CodePointTrie.ValueWidth.Bits8"/>.
             /// </summary>
             /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            /// <p/> @stable ICU 63
-            public static Small8 fromBinary(ByteBuffer bytes)
+            public static Small8 FromBinary(ByteBuffer bytes)
             {
-                return (Small8) CodePointTrie.fromBinary(Type.SMALL, ValueWidth.BITS_8, bytes);
+                return (Small8) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits8, bytes);
             }
         }
     }

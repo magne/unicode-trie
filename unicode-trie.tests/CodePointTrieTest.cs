@@ -106,9 +106,9 @@ namespace CodeHive.unicode_trie.tests
         }
 
         /* ucptrie_enum() callback, modifies a value */
-        private class TestValueFilter : CodePointMap.ValueFilter
+        private class TestValueFilter : CodePointMap.IValueFilter
         {
-            public int apply(int value)
+            public int Apply(int value)
             {
                 return value ^ 0x5555;
             }
@@ -133,13 +133,13 @@ namespace CodeHive.unicode_trie.tests
 
             if (expEnd < 0)
             {
-                fail($"error: {name} getRanges ({variant}) delivers unexpected range [U+{range.getStart():04X}..U+{range.getEnd():04X}].0x{range.getValue():X}\n");
+                fail($"error: {name} getRanges ({variant}) delivers unexpected range [U+{range.GetStart():04X}..U+{range.GetEnd():04X}].0x{range.GetValue():X}\n");
                 return false;
             }
 
-            if (range.getStart() != start || range.getEnd() != expEnd || range.getValue() != expValue)
+            if (range.GetStart() != start || range.GetEnd() != expEnd || range.GetValue() != expValue)
             {
-                fail($"error: {name} getRanges ({variant}) delivers wrong range [U+{range.getStart():04X}..U+{range.getEnd():04X}].0x{range.getValue():X} " +
+                fail($"error: {name} getRanges ({variant}) delivers wrong range [U+{range.GetStart():04X}..U+{range.GetEnd():04X}].0x{range.GetValue():X} " +
                      $"instead of [U+{start:04X}..U+{expEnd:04X}].0x{expValue:X}\n");
                 return false;
             }
@@ -182,7 +182,7 @@ namespace CodeHive.unicode_trie.tests
 
                 i0 = i;
                 // without value handler
-                for (innerLoopCount = 0;; ++i, start = range.getEnd() + 1)
+                for (innerLoopCount = 0;; ++i, start = range.GetEnd() + 1)
                 {
                     if (i < checkRanges.Length)
                     {
@@ -195,7 +195,7 @@ namespace CodeHive.unicode_trie.tests
                         expValue = 0x5005;
                     }
 
-                    getRangeResult = option != CodePointMap.RangeOption.NORMAL ? trie.getRange(start, option, surrValue, null, range) : trie.getRange(start, null, range);
+                    getRangeResult = option != CodePointMap.RangeOption.Normal ? trie.GetRange(start, option, surrValue, null, range) : trie.GetRange(start, null, range);
                     if (!doCheckRange(name, "without value handler",
                         start,              getRangeResult, range, expEnd, expValue))
                     {
@@ -210,7 +210,7 @@ namespace CodeHive.unicode_trie.tests
 
                 // with value handler
                 for (i = i0, start = iterStarts[s], innerLoopCount = 0;;
-                    ++i, start = range.getEnd() + 1)
+                    ++i, start = range.GetEnd() + 1)
                 {
                     if (i < checkRanges.Length)
                     {
@@ -223,7 +223,7 @@ namespace CodeHive.unicode_trie.tests
                         expValue = 0x5005;
                     }
 
-                    getRangeResult = trie.getRange(start, option, surrValue ^ 0x5555, testFilter, range);
+                    getRangeResult = trie.GetRange(start, option, surrValue ^ 0x5555, testFilter, range);
                     if (!doCheckRange(name, "with value handler",
                         start,              getRangeResult, range, expEnd, expValue))
                     {
@@ -245,7 +245,7 @@ namespace CodeHive.unicode_trie.tests
         // where we have many specialized macros in addition to generic functions.
         private void
             testTrieGetters(String testName, CodePointTrie trie,
-                            CodePointTrie.Type type, CodePointTrie.ValueWidth valueWidth,
+                            CodePointTrie.Kind kind, CodePointTrie.ValueWidth valueWidth,
                             CheckRange[] checkRanges)
         {
             int value, value2;
@@ -254,7 +254,7 @@ namespace CodeHive.unicode_trie.tests
             int countErrors = 0;
 
             CodePointTrie.Fast fastTrie =
-                type == CodePointTrie.Type.FAST ? (CodePointTrie.Fast) trie : null;
+                kind == CodePointTrie.Kind.Fast ? (CodePointTrie.Fast) trie : null;
             String typeName = "trie";
 
             SpecialValues specials = getSpecialValues(checkRanges);
@@ -269,7 +269,7 @@ namespace CodeHive.unicode_trie.tests
                 {
                     if (start <= 0x7f)
                     {
-                        value2 = trie.asciiGet(start);
+                        value2 = trie.AsciiGet(start);
                         if (value != value2)
                         {
                             fail($"error: {typeName}({testName}).fromASCII(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
@@ -281,7 +281,7 @@ namespace CodeHive.unicode_trie.tests
                     {
                         if (start <= 0xffff)
                         {
-                            value2 = fastTrie.bmpGet(start);
+                            value2 = fastTrie.BmpGet(start);
                             if (value != value2)
                             {
                                 fail($"error: {typeName}({testName}).fromBMP(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
@@ -290,7 +290,7 @@ namespace CodeHive.unicode_trie.tests
                         }
                         else
                         {
-                            value2 = fastTrie.suppGet(start);
+                            value2 = fastTrie.SuppGet(start);
                             if (value != value2)
                             {
                                 fail($"error: {typeName}({testName}).fromSupp(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
@@ -299,7 +299,7 @@ namespace CodeHive.unicode_trie.tests
                         }
                     }
 
-                    value2 = trie.get(start);
+                    value2 = trie.Get(start);
                     if (value != value2)
                     {
                         fail($"error: {typeName}({testName}).get(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
@@ -315,8 +315,8 @@ namespace CodeHive.unicode_trie.tests
             }
 
             /* test errorValue */
-            value = trie.get(-1);
-            value2 = trie.get(0x110000);
+            value = trie.Get(-1);
+            value2 = trie.Get(0x110000);
             if (value != specials.errorValue || value2 != specials.errorValue)
             {
                 fail($"error: {typeName}({testName}).get(out of range) != errorValue\n");
@@ -343,7 +343,7 @@ namespace CodeHive.unicode_trie.tests
 
                 while (start < limit)
                 {
-                    value2 = mutableTrie.get(start);
+                    value2 = mutableTrie.Get(start);
                     if (value != value2)
                     {
                         fail($"error: {typeName}({testName}).get(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
@@ -359,8 +359,8 @@ namespace CodeHive.unicode_trie.tests
             }
 
             /* test errorValue */
-            value = mutableTrie.get(-1);
-            value2 = mutableTrie.get(0x110000);
+            value = mutableTrie.Get(-1);
+            value2 = mutableTrie.Get(0x110000);
             if (value != specials.errorValue || value2 != specials.errorValue)
             {
                 fail($"error: {typeName}({testName}).get(out of range) != errorValue\n");
@@ -382,7 +382,7 @@ namespace CodeHive.unicode_trie.tests
             StringBuilder s = new StringBuilder();
             int[] values = new int[16000];
 
-            int errorValue = trie.get(-1);
+            int errorValue = trie.Get(-1);
             int value, expected;
             int prevCP, c, c2;
             int i, sIndex, countValues;
@@ -417,7 +417,7 @@ namespace CodeHive.unicode_trie.tests
                 }
             }
 
-            CodePointMap.StringIterator si = trie.stringIterator(s, 0);
+            CodePointMap.StringIterator si = trie.GetStringIterator(s, 0);
 
             /* try forward */
             sIndex = 0;
@@ -426,9 +426,9 @@ namespace CodeHive.unicode_trie.tests
             {
                 c2 = s.codePointAt(sIndex);
                 sIndex += Character.charCount(c2);
-                Assert.True(si.next(), "next() at " + si.getIndex());
-                c = si.getCodePoint();
-                value = si.getValue();
+                Assert.True(si.Next(), "next() at " + si.GetIndex());
+                c = si.GetCodePoint();
+                value = si.GetValue();
                 expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {
@@ -444,7 +444,7 @@ namespace CodeHive.unicode_trie.tests
                 ++i;
             }
 
-            Assert.False(si.next(), "next() at the end");
+            Assert.False(si.Next(), "next() at the end");
 
             /* try backward */
             sIndex = s.length();
@@ -454,9 +454,9 @@ namespace CodeHive.unicode_trie.tests
                 --i;
                 c2 = s.codePointBefore(sIndex);
                 sIndex -= Character.charCount(c2);
-                Assert.True(si.previous(), "previous() at " + si.getIndex());
-                c = si.getCodePoint();
-                value = si.getValue();
+                Assert.True(si.Previous(), "previous() at " + si.GetIndex());
+                c = si.GetCodePoint();
+                value = si.GetValue();
                 expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {
@@ -469,17 +469,17 @@ namespace CodeHive.unicode_trie.tests
                 }
             }
 
-            Assert.False(si.previous(), "previous() at the start");
+            Assert.False(si.Previous(), "previous() at the start");
         }
 
         private void
             testTrie(String testName, CodePointTrie trie,
-                     CodePointTrie.Type type, CodePointTrie.ValueWidth valueWidth,
+                     CodePointTrie.Kind kind, CodePointTrie.ValueWidth valueWidth,
                      CheckRange[] checkRanges)
         {
-            testTrieGetters(testName, trie, type, valueWidth, checkRanges);
-            testTrieGetRanges(testName, trie, CodePointMap.RangeOption.NORMAL, 0, checkRanges);
-            if (type == CodePointTrie.Type.FAST)
+            testTrieGetters(testName, trie, kind, valueWidth, checkRanges);
+            testTrieGetRanges(testName, trie, CodePointMap.RangeOption.Normal, 0, checkRanges);
+            if (kind == CodePointTrie.Kind.Fast)
             {
                 testTrieUTF16(testName, trie, valueWidth, checkRanges);
                 // Java: no testTrieUTF8(testName, trie, valueWidth, checkRanges);
@@ -490,12 +490,12 @@ namespace CodeHive.unicode_trie.tests
             testBuilder(String testName, MutableCodePointTrie mutableTrie, CheckRange[] checkRanges)
         {
             testBuilderGetters(testName, mutableTrie, checkRanges);
-            testTrieGetRanges(testName, mutableTrie, CodePointMap.RangeOption.NORMAL, 0, checkRanges);
+            testTrieGetRanges(testName, mutableTrie, CodePointMap.RangeOption.Normal, 0, checkRanges);
         }
 
         private void
             testTrieSerialize(String testName, MutableCodePointTrie mutableTrie,
-                              CodePointTrie.Type type, CodePointTrie.ValueWidth valueWidth, bool withSwap,
+                              CodePointTrie.Kind kind, CodePointTrie.ValueWidth valueWidth, bool withSwap,
                               CheckRange[] checkRanges)
         {
             CodePointTrie trie;
@@ -510,28 +510,28 @@ namespace CodeHive.unicode_trie.tests
              */
             do
             {
-                trie = mutableTrie.buildImmutable(type, valueWidth);
+                trie = mutableTrie.BuildImmutable(kind, valueWidth);
                 var os = new MemoryStream();
-                length1 = trie.toBinary(os);
+                length1 = trie.ToBinary(os);
                 // assertEquals(testName + ".toBinary() length", os.size(), length1);
                 Assert.Equal(length1, os.Length);
                 ByteBuffer storage = ByteBuffer.wrap(os.ToArray());
                 // Java: no preflighting
 
-                testTrie(testName, trie, type, valueWidth, checkRanges);
+                testTrie(testName, trie, kind, valueWidth, checkRanges);
                 trie = null;
 
                 // Java: There is no code for "swapping" the endianness of data.
                 // withSwap is unused.
 
-                trie = CodePointTrie.fromBinary(type, valueWidth, storage);
-                if (type != trie.getType())
+                trie = CodePointTrie.FromBinary(kind, valueWidth, storage);
+                if (kind != trie.GetKind())
                 {
-                    fail($"error: trie serialization ({testName}) did not preserve trie type\n");
+                    fail($"error: trie serialization ({testName}) did not preserve trie kind\n");
                     break;
                 }
 
-                if (valueWidth != trie.getValueWidth())
+                if (valueWidth != trie.GetValueWidth())
                 {
                     fail($"error: trie serialization ({testName}) did not preserve data value width\n");
                     break;
@@ -546,28 +546,28 @@ namespace CodeHive.unicode_trie.tests
 
                 {
                     storage.rewind();
-                    CodePointTrie any = CodePointTrie.fromBinary(null, null, storage);
-                    if (type != any.getType())
+                    CodePointTrie any = CodePointTrie.FromBinary(null, null, storage);
+                    if (kind != any.GetKind())
                     {
-                        fail("error: ucptrie_openFromBinary(UCPTRIE_TYPE_ANY, UCPTRIE_VALUE_BITS_ANY).getType() wrong\n");
+                        fail("error: ucptrie_openFromBinary(UCPTRIE_TYPE_ANY, UCPTRIE_VALUE_BITS_ANY).GetKind() wrong\n");
                     }
 
-                    if (valueWidth != any.getValueWidth())
+                    if (valueWidth != any.GetValueWidth())
                     {
                         fail("error: ucptrie_openFromBinary(UCPTRIE_TYPE_ANY, UCPTRIE_VALUE_BITS_ANY).getValueWidth() wrong\n");
                     }
                 }
 
-                testTrie(testName, trie, type, valueWidth, checkRanges);
+                testTrie(testName, trie, kind, valueWidth, checkRanges);
                 {
                     /* make a mutable trie from an immutable one */
                     int value, value2;
-                    MutableCodePointTrie mutable2 = MutableCodePointTrie.fromCodePointMap(trie);
+                    MutableCodePointTrie mutable2 = MutableCodePointTrie.FromCodePointMap(trie);
 
-                    value = mutable2.get(0xa1);
-                    mutable2.set(0xa1, 789);
-                    value2 = mutable2.get(0xa1);
-                    mutable2.set(0xa1, value);
+                    value = mutable2.Get(0xa1);
+                    mutable2.Set(0xa1, 789);
+                    value2 = mutable2.Get(0xa1);
+                    mutable2.Set(0xa1, value);
                     if (value2 != 789)
                     {
                         fail($"error: modifying a mutableTrie-from-UCPTrie ({testName}) failed\n");
@@ -596,20 +596,20 @@ namespace CodeHive.unicode_trie.tests
             {
                 String _name = testName + ".16";
                 testTrieSerialize(_name,     mutableTrie,
-                    CodePointTrie.Type.FAST, CodePointTrie.ValueWidth.BITS_16, withClone,
+                    CodePointTrie.Kind.Fast, CodePointTrie.ValueWidth.Bits16, withClone,
                     checkRanges);
             }
 
             String name = testName + ".32";
             testTrieSerialize(name,      mutableTrie,
-                CodePointTrie.Type.FAST, CodePointTrie.ValueWidth.BITS_32, withClone,
+                CodePointTrie.Kind.Fast, CodePointTrie.ValueWidth.Bits32, withClone,
                 checkRanges);
 
             if (oredValues <= 0xff)
             {
                 name = testName + ".8";
                 testTrieSerialize(name,      mutableTrie,
-                    CodePointTrie.Type.FAST, CodePointTrie.ValueWidth.BITS_8, withClone,
+                    CodePointTrie.Kind.Fast, CodePointTrie.ValueWidth.Bits8, withClone,
                     checkRanges);
             }
 
@@ -617,7 +617,7 @@ namespace CodeHive.unicode_trie.tests
             {
                 name = testName + ".small16";
                 testTrieSerialize(name,       mutableTrie,
-                    CodePointTrie.Type.SMALL, CodePointTrie.ValueWidth.BITS_16, withClone,
+                    CodePointTrie.Kind.Small, CodePointTrie.ValueWidth.Bits16, withClone,
                     checkRanges);
             }
 
@@ -652,11 +652,11 @@ namespace CodeHive.unicode_trie.tests
                 value = setRanges[i].value;
                 if ((limit - start) == 1)
                 {
-                    mutableTrie.set(start, value);
+                    mutableTrie.Set(start, value);
                 }
                 else
                 {
-                    mutableTrie.setRange(start, limit - 1, value);
+                    mutableTrie.SetRange(start, limit - 1, value);
                 }
             }
 
@@ -870,16 +870,16 @@ namespace CodeHive.unicode_trie.tests
             for (i = 0; i < (0x120000 >> 4) / 2; ++i)
             {
                 // 4=UCPTRIE_SHIFT_3
-                mutableTrie.setRange(0x740, 0x840 - 1, 1);
-                mutableTrie.setRange(0x780, 0x880 - 1, 1);
-                mutableTrie.setRange(0x740, 0x840 - 1, 2);
-                mutableTrie.setRange(0x780, 0x880 - 1, 3);
+                mutableTrie.SetRange(0x740, 0x840 - 1, 1);
+                mutableTrie.SetRange(0x780, 0x880 - 1, 1);
+                mutableTrie.SetRange(0x740, 0x840 - 1, 2);
+                mutableTrie.SetRange(0x780, 0x880 - 1, 3);
             }
 
             /* make blocks that will be free during compaction */
-            mutableTrie.setRange(0x1000, 0x3000 - 1, 2);
-            mutableTrie.setRange(0x2000, 0x4000 - 1, 3);
-            mutableTrie.setRange(0x1000, 0x4000 - 1, 1);
+            mutableTrie.SetRange(0x1000, 0x3000 - 1, 2);
+            mutableTrie.SetRange(0x2000, 0x4000 - 1, 3);
+            mutableTrie.SetRange(0x1000, 0x4000 - 1, 1);
 
             mutableTrie = testTrieSerializeAllValueWidth(testName, mutableTrie, false, checkRanges);
         }
@@ -908,23 +908,23 @@ namespace CodeHive.unicode_trie.tests
              */
             for (i = 0; i < 0x1000; ++i)
             {
-                mutableTrie.set(i, 2);
+                mutableTrie.Set(i, 2);
             }
 
             for (i = 0x720; i < 0x1100; ++i)
             {
                 /* some overlap */
-                mutableTrie.set(i, 3);
+                mutableTrie.Set(i, 3);
             }
 
             for (i = 0x7a0; i < 0x900; ++i)
             {
-                mutableTrie.set(i, 4);
+                mutableTrie.Set(i, 4);
             }
 
             for (i = 0x8a0; i < 0x110000; ++i)
             {
-                mutableTrie.set(i, 5);
+                mutableTrie.Set(i, 5);
             }
 
             mutableTrie = testTrieSerializeAllValueWidth(testName, mutableTrie, false, checkRanges);
@@ -946,15 +946,15 @@ namespace CodeHive.unicode_trie.tests
             for (i = 0; i < 0x110000; i += 0x1000)
             {
                 int value = i >> 12;
-                mutableTrie.setRange(i, i + 0xfff, value);
+                mutableTrie.SetRange(i, i + 0xfff, value);
                 checkRanges[value + 1] = new CheckRange(i + 0x1000, value);
             }
 
             for (i = 0; i < 0x110000; i += 0x1000)
             {
                 int expected = i >> 12;
-                int v0 = mutableTrie.get(i);
-                int vfff = mutableTrie.get(i + 0xfff);
+                int v0 = mutableTrie.Get(i);
+                int vfff = mutableTrie.Get(i + 0xfff);
                 if (v0 != expected || vfff != expected)
                 {
                     fail($"error: MutableCodePointTrie U+{i:04X} unexpected value\n");
@@ -982,7 +982,7 @@ namespace CodeHive.unicode_trie.tests
             for (c = 0; c < 0x10000; c += 0x40)
             {
                 int value = c >> 4;
-                mutableTrie.setRange(c, c + 0x3f, value);
+                mutableTrie.SetRange(c, c + 0x3f, value);
                 checkRanges[r++] = new CheckRange(c + 0x40, value);
             }
 
@@ -990,15 +990,15 @@ namespace CodeHive.unicode_trie.tests
             for (c = 0x20000; c < 0x30230; c += 0x10)
             {
                 int value = c >> 4;
-                mutableTrie.setRange(c, c + 0xf, value);
+                mutableTrie.SetRange(c, c + 0xf, value);
                 checkRanges[r++] = new CheckRange(c + 0x10, value);
             }
 
-            mutableTrie.setRange(0x30230, 0x30233, 0x3023);
+            mutableTrie.SetRange(0x30230, 0x30233, 0x3023);
             checkRanges[r++] = new CheckRange(0x30234, 0x3023);
-            mutableTrie.setRange(0x30234, 0xdffff, 0x5005);
+            mutableTrie.SetRange(0x30234, 0xdffff, 0x5005);
             checkRanges[r++] = new CheckRange(0xe0000, 0x5005);
-            mutableTrie.setRange(0xe0000, 0x10ffff, 0x9009);
+            mutableTrie.SetRange(0xe0000, 0x10ffff, 0x9009);
             checkRanges[r++] = new CheckRange(0x110000, 0x9009);
 
             var _checkRanges = new CheckRange[r];
@@ -1006,7 +1006,7 @@ namespace CodeHive.unicode_trie.tests
             checkRanges = _checkRanges;
             testBuilder(testName, mutableTrie, checkRanges);
             testTrieSerialize("much-data.16", mutableTrie,
-                CodePointTrie.Type.FAST,      CodePointTrie.ValueWidth.BITS_16, false,
+                CodePointTrie.Kind.Fast,      CodePointTrie.ValueWidth.Bits16, false,
                 checkRanges);
         }
 
@@ -1016,7 +1016,7 @@ namespace CodeHive.unicode_trie.tests
             testTrieGetRanges(testName, mutableTrie, option, 5, checkRanges);
             MutableCodePointTrie clone = (MutableCodePointTrie) mutableTrie.Clone();
             CodePointTrie trie =
-                clone.buildImmutable(CodePointTrie.Type.FAST, CodePointTrie.ValueWidth.BITS_16);
+                clone.BuildImmutable(CodePointTrie.Kind.Fast, CodePointTrie.ValueWidth.Bits16);
             testTrieGetRanges(testName, trie, option, 5, checkRanges);
         }
 
@@ -1085,23 +1085,23 @@ namespace CodeHive.unicode_trie.tests
             MutableCodePointTrie mutableTrie = makeTrieWithRanges(
                 "fixedSurr", false, setRangesFixedSurr, checkRangesFixedLeadSurr1);
             testGetRangesFixedSurr("fixedLeadSurr1",            mutableTrie,
-                CodePointMap.RangeOption.FIXED_LEAD_SURROGATES, checkRangesFixedLeadSurr1);
+                CodePointMap.RangeOption.FixedLeadSurrogates, checkRangesFixedLeadSurr1);
             testGetRangesFixedSurr("fixedAllSurr1",            mutableTrie,
-                CodePointMap.RangeOption.FIXED_ALL_SURROGATES, checkRangesFixedAllSurr1);
+                CodePointMap.RangeOption.FixedAllSurrogates, checkRangesFixedAllSurr1);
             // Setting a range in the middle of lead surrogates makes no difference.
-            mutableTrie.setRange(0xd844, 0xd899, 5);
+            mutableTrie.SetRange(0xd844, 0xd899, 5);
             testGetRangesFixedSurr("fixedLeadSurr2",            mutableTrie,
-                CodePointMap.RangeOption.FIXED_LEAD_SURROGATES, checkRangesFixedLeadSurr1);
+                CodePointMap.RangeOption.FixedLeadSurrogates, checkRangesFixedLeadSurr1);
             // Bridge the gap before the lead surrogates.
-            mutableTrie.set(0xd7ff, 5);
+            mutableTrie.Set(0xd7ff, 5);
             testGetRangesFixedSurr("fixedLeadSurr3",            mutableTrie,
-                CodePointMap.RangeOption.FIXED_LEAD_SURROGATES, checkRangesFixedLeadSurr3);
+                CodePointMap.RangeOption.FixedLeadSurrogates, checkRangesFixedLeadSurr3);
             testGetRangesFixedSurr("fixedAllSurr3",            mutableTrie,
-                CodePointMap.RangeOption.FIXED_ALL_SURROGATES, checkRangesFixedAllSurr3);
+                CodePointMap.RangeOption.FixedAllSurrogates, checkRangesFixedAllSurr3);
             // Bridge the gap after the trail surrogates.
-            mutableTrie.set(0xe000, 5);
+            mutableTrie.Set(0xe000, 5);
             testGetRangesFixedSurr("fixedSurr4",               mutableTrie,
-                CodePointMap.RangeOption.FIXED_ALL_SURROGATES, checkRangesFixedSurr4);
+                CodePointMap.RangeOption.FixedAllSurrogates, checkRangesFixedSurr4);
         }
 
         [Fact]
@@ -1118,11 +1118,11 @@ namespace CodeHive.unicode_trie.tests
                 // U+0880..U+088F map to initial value 0, potential match for small null data block.
                 new SetRange(0x890, 0x1040, 2),
                 // U+1040..U+1050 map to 0.
-                // First small null data block in a small-type trie.
-                // In a fast-type trie, it is ok to match a small null data block at U+1041
+                // First small null data block in a small-kind trie.
+                // In a fast-kind trie, it is ok to match a small null data block at U+1041
                 // but not at U+1040.
                 new SetRange(0x1051, 0x10000, 3),
-                // No fast data block (block length 64) filled with 0 regardless of trie type.
+                // No fast data block (block length 64) filled with 0 regardless of trie kind.
                 // Need more blocks filled with 0 than the largest range above,
                 // and need a highStart above that so that it actually counts.
                 new SetRange(0x20000, 0x110000, 9)
@@ -1153,7 +1153,7 @@ namespace CodeHive.unicode_trie.tests
             for (int i = 0; i < 0x1000; i += 0x10)
             {
                 int value = i >> 4;
-                mutableTrie.setRange(i, i + 0xf, value);
+                mutableTrie.SetRange(i, i + 0xf, value);
                 checkRanges[value] = new CheckRange(i + 0x10, value);
             }
 

@@ -6,39 +6,35 @@ using CodeHive.unicode_trie.java;
 
 #pragma warning disable 612
 
-// ReSharper disable InconsistentNaming
 namespace CodeHive.unicode_trie
 {
     /// <summary>
     /// Abstract map from Unicode code points (U+0000..U+10FFFF) to integer values.
     /// This does not implement <see cref="System.Collections.IDictionary"/>.
     /// </summary>
-    /// <p/> @stable ICU 63
     public abstract class CodePointMap : IEnumerable<CodePointMap.Range>
     {
         /// <summary>
         /// Selectors for how getRange() should report value ranges overlapping with surrogates.
         /// Most users should use NORMAL.
         ///
-        /// <seealso cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+        /// <seealso cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
         /// </summary>
-        /// <p/> @stable ICU 63
         public enum RangeOption
         {
             /// <summary>
-            /// <see cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+            /// <see cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
             /// enumerates all same-value ranges as stored in the map. Most users should use this option.
             /// </summary>
-            /// <p/> @stable ICU 63
-            NORMAL,
+            Normal,
 
             /// <summary>
-            /// <see cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+            /// <see cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
             /// enumerates all same-value ranges as stored in the map, except that lead surrogates
             /// (U+D800..U+DBFF) are treated as having the surrogateValue, which is passed to getRange()
             /// as a separate parameter. The surrogateValue is not transformed via filter().
             ///
-            /// <p/>Most users should use <see cref="NORMAL"/> instead.
+            /// <p/>Most users should use <see cref="Normal"/> instead.
             ///
             /// <p/>This option is useful for maps that map surrogate code *units* to special values
             /// optimized for UTF-16 string processing or for special error behavior for unpaired
@@ -47,11 +43,10 @@ namespace CodeHive.unicode_trie
             ///
             /// <seealso cref="Character.isHighSurrogate"/>
             /// </summary>
-            /// <p/> @stable ICU 63
-            FIXED_LEAD_SURROGATES,
+            FixedLeadSurrogates,
 
             /// <summary>
-            /// <see cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+            /// <see cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
             /// enumerates all same-value ranges as stored in the map, except that all surrogates
             /// (U+D800..U+DFFF) are treated as having the surrogateValue, which is passed to getRange()
             /// as a separate parameter. The surrogateValue is not transformed via filter().
@@ -65,8 +60,7 @@ namespace CodeHive.unicode_trie
             ///
             /// <seealso cref="Character.isSurrogate"/>
             /// </summary>
-            /// <p/> @stable ICU 63
-            FIXED_ALL_SURROGATES,
+            FixedAllSurrogates,
         }
 
         /// <summary>
@@ -78,31 +72,28 @@ namespace CodeHive.unicode_trie
         /// make a filter for one of several values,
         /// return a value index computed from the map value, etc.
         ///
-        /// <seealso cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+        /// <seealso cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
         /// <seealso cref="CodePointMap.GetEnumerator()"/>
         /// </summary>
-        /// <p/> @stable ICU 63
-        public interface ValueFilter
+        public interface IValueFilter
         {
             /// <summary>
             /// Modifies the map value.
             /// </summary>
             /// <param name="value">map value</param>
             /// <returns>modified value</returns>
-            /// <p/> @stable ICU 63
-            public int apply(int value);
+            public int Apply(int value);
         }
 
         /// <summary>
         /// Range iteration result data.
         /// Code points from start to end map to the same value.
-        /// The value may have been modified by <see cref="ValueFilter.apply"/>,
+        /// The value may have been modified by <see cref="IValueFilter.Apply"/>,
         /// or it may be the surrogateValue if a RangeOption other than "normal" was used.
         ///
-        /// <seealso cref="CodePointMap.getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+        /// <seealso cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
         /// <seealso cref="CodePointMap.GetEnumerator()"/>
         /// </summary>
-        /// <p/> @stable ICU 63
         public class Range
         {
             internal int start;
@@ -112,7 +103,6 @@ namespace CodeHive.unicode_trie
             /// <summary>
             /// Constructor. Sets start and end to -1 and value to 0.
             /// </summary>
-            /// <p/> @stable ICU 63
             public Range()
             {
                 start = end = -1;
@@ -120,25 +110,13 @@ namespace CodeHive.unicode_trie
             }
 
             /// <returns>the start code point</returns>
-            /// <p/> @stable ICU 63
-            public int getStart()
-            {
-                return start;
-            }
+            public int GetStart() => start;
 
             /// <returns>the (inclusive) end code point</returns>
-            /// <p/> @stable ICU 63
-            public int getEnd()
-            {
-                return end;
-            }
+            public int GetEnd() => end;
 
             /// <returns>the range value</returns>
-            /// <p/> @stable ICU 63
-            public int getValue()
-            {
-                return value;
-            }
+            public int GetValue() => value;
 
             /// <summary>
             /// Sets the range. When using <see cref="CodePointMap.GetEnumerator()"/>,
@@ -147,9 +125,8 @@ namespace CodeHive.unicode_trie
             /// <param name="start">new start code point</param>
             /// <param name="end">new end code point</param>
             /// <param name="value">new value</param>
-            /// <p/> @stable ICU 63
             [SuppressMessage("ReSharper", "ParameterHidesMember")]
-            public void set(int start, int end, int value)
+            public void Set(int start, int end, int value)
             {
                 this.start = start;
                 this.end = end;
@@ -162,7 +139,7 @@ namespace CodeHive.unicode_trie
         /// This does not implement <see cref="IEnumerable{T}"/>.
         /// <code>
         /// void onString(CodePointMap map, CharSequence s, int start) {
-        ///     CodePointMap.StringIterator iter = map.stringIterator(s, start);
+        ///     CodePointMap.StringIterator iter = map.GetStringIterator(s, start);
         ///     while (iter.next()) {
         ///         int end = iter.getIndex();  // code point from between start and end
         ///         useValue(s, start, end, iter.getCodePoint(), iter.getValue());
@@ -172,7 +149,6 @@ namespace CodeHive.unicode_trie
         /// </code>
         /// <p/>This class is not intended for public subclassing.
         /// </summary>
-        /// <p/> @stable ICU 63
         public class StringIterator
         {
             private readonly CodePointMap codePointMap;
@@ -205,9 +181,8 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="s">string to iterate over</param>
             /// <param name="sIndex">string index where the iteration will start</param>
-            /// <p/> @stable ICU 63
             [SuppressMessage("ReSharper", "ParameterHidesMember")]
-            public void reset(CharSequence s, int sIndex)
+            public void Reset(CharSequence s, int sIndex)
             {
                 this.s = s;
                 this.sIndex = sIndex;
@@ -222,8 +197,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <returns>true if the string index was not yet at the end of the string;
             ///          otherwise the iterator did not advance</returns>
-            /// <p/> @stable ICU 63
-            public virtual bool next()
+            public virtual bool Next()
             {
                 if (sIndex >= s.length())
                 {
@@ -232,7 +206,7 @@ namespace CodeHive.unicode_trie
 
                 c = Character.codePointAt(s, sIndex);
                 sIndex += Character.charCount(c);
-                value = codePointMap.get(c);
+                value = codePointMap.Get(c);
                 return true;
             }
 
@@ -243,8 +217,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <returns>true if the string index was not yet at the start of the string;
             ///          otherwise the iterator did not advance</returns>
-            /// <p/> @stable ICU 63
-            public virtual bool previous()
+            public virtual bool Previous()
             {
                 if (sIndex <= 0)
                 {
@@ -253,20 +226,18 @@ namespace CodeHive.unicode_trie
 
                 c = Character.codePointBefore(s, sIndex);
                 sIndex -= Character.charCount(c);
-                value = codePointMap.get(c);
+                value = codePointMap.Get(c);
                 return true;
             }
 
             /// <returns>the string index</returns>
-            /// <p/> @stable ICU 63
-            public int getIndex()
+            public int GetIndex()
             {
                 return sIndex;
             }
 
             /// <returns>the code point</returns>
-            /// <p/> @stable ICU 63
-            public int getCodePoint()
+            public int GetCodePoint()
             {
                 return c;
             }
@@ -274,8 +245,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the map value,
             ///          or an implementation-defined error value if
             ///          the code point is an unpaired surrogate</returns>
-            /// <p/> @stable ICU 63
-            public int getValue()
+            public int GetValue()
             {
                 return value;
             }
@@ -284,8 +254,7 @@ namespace CodeHive.unicode_trie
         /// <summary>
         /// Protected no-args constructor.
         /// </summary>
-        /// <p/> @stable ICU 63
-        // ReSharper disable once EmptyConstructor
+// ReSharper disable once EmptyConstructor
         protected CodePointMap()
         { }
 
@@ -297,8 +266,7 @@ namespace CodeHive.unicode_trie
         /// <returns>the map value,
         ///          or an implementation-defined error value if
         ///          the code point is not in the range 0..U+10FFFF</returns>
-        /// <p/> @stable ICU 63
-        public abstract int get(int c);
+        public abstract int Get(int c);
 
         /// <summary>
         /// Sets the range object to a range of code points beginning with the start parameter.
@@ -311,7 +279,7 @@ namespace CodeHive.unicode_trie
         /// (This is normally faster than iterating over code points and get()ting each value,
         /// but may be much slower than a data structure that stores ranges directly.)
         ///
-        /// <p/>If the <see cref="ValueFilter"/> parameter is not null, then
+        /// <p/>If the <see cref="IValueFilter"/> parameter is not null, then
         /// the value to be delivered is passed through that filter, and the return value is the end
         /// of the range where all values are modified to the same actual value.
         /// The value is unchanged if that parameter is null.
@@ -319,7 +287,7 @@ namespace CodeHive.unicode_trie
         /// <p/>Example:
         /// <code>
         /// int start = 0;
-        /// CodePointMap.Range range = new CodePointMap.Range();
+        /// Range range = new CodePointMap.Range();
         /// while (map.getRange(start, null, range)) {
         ///     int end = range.getEnd();
         ///     int value = range.getValue();
@@ -333,8 +301,7 @@ namespace CodeHive.unicode_trie
         ///      or null if the values from the map are to be used unmodified</param>
         /// <param name="range">the range object that will be set to the code point range and value</param>
         /// <returns>true if start is 0..U+10FFFF; otherwise no new range is fetched</returns>
-        /// <p/> @stable ICU 63
-        public abstract bool getRange(int start, ValueFilter filter, Range range);
+        public abstract bool GetRange(int start, IValueFilter filter, Range range);
 
         /// <summary>
         /// Sets the range object to a range of code points beginning with the start parameter.
@@ -349,27 +316,26 @@ namespace CodeHive.unicode_trie
         /// </summary>
         /// <param name="start">range start</param>
         /// <param name="option">defines whether surrogates are treated normally,
-        ///               or as having the surrogateValue; usually <see cref="RangeOption.NORMAL"/></param>
-        /// <param name="surrogateValue">value for surrogates; ignored if option==<see cref="RangeOption.NORMAL"/></param>
+        ///               or as having the surrogateValue; usually <see cref="RangeOption.Normal"/></param>
+        /// <param name="surrogateValue">value for surrogates; ignored if option==<see cref="RangeOption.Normal"/></param>
         /// <param name="filter">an object that may modify the map data value,
         ///     or null if the values from the map are to be used unmodified</param>
         /// <param name="range">the range object that will be set to the code point range and value</param>
         /// <returns>true if start is 0..U+10FFFF; otherwise no new range is fetched</returns>
-        /// <p/> @stable ICU 63
-        public bool getRange(int start, RangeOption option, int surrogateValue,
-                             ValueFilter filter, Range range)
+        public bool GetRange(int start, RangeOption option, int surrogateValue,
+                             IValueFilter filter, Range range)
         {
-            if (!getRange(start, filter, range))
+            if (!GetRange(start, filter, range))
             {
                 return false;
             }
 
-            if (option == RangeOption.NORMAL)
+            if (option == RangeOption.Normal)
             {
                 return true;
             }
 
-            int surrEnd = option == RangeOption.FIXED_ALL_SURROGATES ? 0xdfff : 0xdbff;
+            int surrEnd = option == RangeOption.FixedAllSurrogates ? 0xdfff : 0xdbff;
 
             int end = range.end;
             if (end < 0xd7ff || start > surrEnd)
@@ -407,7 +373,7 @@ namespace CodeHive.unicode_trie
 
             // See if the surrValue surrogate range can be merged with
             // an immediately following range.
-            if (getRange(surrEnd + 1, filter, range) && range.value == surrogateValue)
+            if (GetRange(surrEnd + 1, filter, range) && range.value == surrogateValue)
             {
                 range.start = start;
                 return true;
@@ -431,7 +397,7 @@ namespace CodeHive.unicode_trie
 
         /// <summary>
         /// Convenience enumerator over same-map-value code point ranges.
-        /// Same as looping over all ranges with <see cref="getRange(int,CodePointMap.ValueFilter,CodePointMap.Range)"/>
+        /// Same as looping over all ranges with <see cref="GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
         /// without filtering.
         /// Adjacent ranges have different map values.
         ///
@@ -442,7 +408,7 @@ namespace CodeHive.unicode_trie
         {
             var range = new Range();
 
-            while (-1 <= range.end && range.end < 0x10ffff && getRange(range.end + 1, null, range))
+            while (-1 <= range.end && range.end < 0x10ffff && GetRange(range.end + 1, null, range))
             {
                 yield return range;
             }
@@ -455,13 +421,12 @@ namespace CodeHive.unicode_trie
         /// <param name="s">string to iterate over</param>
         /// <param name="sIndex">string index where the iteration will start</param>
         /// <returns>the iterator</returns>
-        /// <p/> @stable ICU 63
-        public virtual StringIterator stringIterator(CharSequence s, int sIndex)
+        public virtual StringIterator GetStringIterator(CharSequence s, int sIndex)
         {
             return new StringIterator(this, s, sIndex);
         }
 
-        internal static void assert(bool expression)
+        internal static void Assert(bool expression)
         {
             if (!expression)
             {
