@@ -311,7 +311,7 @@ namespace CodeHive.unicode_trie
         /// all those from start to there have the same value.
         /// Returns false if start is not 0..U+10FFFF.
         ///
-        /// <p/>Same as the simpler {@link #getRange(int, ValueFilter, Range)} but optionally
+        /// <p/>Same as the simpler <see cref="GetRange(int,IValueFilter,Range)"/> but optionally
         /// modifies the range if it overlaps with surrogate code points.
         /// </summary>
         /// <param name="start">range start</param>

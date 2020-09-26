@@ -72,7 +72,7 @@ namespace CodeHive.unicode_trie
         }
 
         /// <summary>
-        /// Creates a mutable trie with the same contents as the {@link CodePointMap}.
+        /// Creates a mutable trie with the same contents as the <see cref="CodePointMap"/>.
         /// </summary>
         /// <param name="map">the source map or trie</param>
         /// <returns>the mutable trie</returns>
