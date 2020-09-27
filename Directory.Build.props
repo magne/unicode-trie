@@ -4,7 +4,7 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition=" ! $(MSBuildProjectName.Endswith('.bench')) ">
     <AssemblyName>CodeHive.$(MSBuildProjectName)</AssemblyName>
     <Version>0.0.2</Version>
   </PropertyGroup>
