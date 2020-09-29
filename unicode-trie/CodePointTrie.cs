@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using CodeHive.unicode_trie.icu;
 using CodeHive.unicode_trie.java;
+using CodeHive.unicode_trie.util;
 
 #pragma warning disable 612
 
@@ -97,13 +98,12 @@ namespace CodeHive.unicode_trie
         }
 
         /// <summary>
-        /// Creates a trie from its binary form,
-        /// stored in the ByteBuffer starting at the current position.
-        /// Advances the buffer position to just after the trie data.
+        /// Creates a trie from its binary form, stored in the Stream starting at the current position.
+        /// Advances the stream position to just after the trie data.
         /// Inverse of <see cref="ToBinary"/>.
         ///
-        /// <p/>The data is copied from the buffer;
-        /// later modification of the buffer will not affect the trie.
+        /// <p/>The data is copied from the stream;
+        /// later modification of the stream will not affect the trie.
         /// </summary>
         /// <param name="type">selects the trie kind; this method throws an exception
         ///             if the kind does not match the binary data;
@@ -111,181 +111,149 @@ namespace CodeHive.unicode_trie
         /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
         ///                  if the valueWidth does not match the binary data;
         ///                  use null to accept any data value width</param>
-        /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+        /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
         /// <returns>the trie</returns>
         /// <seealso cref="MutableCodePointTrie"/>
         /// <seealso cref="MutableCodePointTrie.BuildImmutable"/>
         /// <seealso cref="ToBinary"/>
-        public static CodePointTrie FromBinary(Kind? type, ValueWidth? valueWidth, ByteBuffer bytes)
+        public static CodePointTrie FromBinary(Kind? type, ValueWidth? valueWidth, Stream stream)
         {
-            ByteOrder outerByteOrder = bytes.order();
-            try
+            // TODO Don't rely on character encoding, use explicit type when writing char (ushort)
+            using var reader = new BinaryEndianReader(stream, Encoding.Unicode, true);
+
+            // TODO Enough data for a trie header?
+            // if (bytes.remaining() < 16 /* sizeof(UCPTrieHeader) */)
+            // {
+            //     throw new ICUUncheckedIOException("Buffer too short for a CodePointTrie header");
+            // }
+
+            // struct UCPTrieHeader
+            /* "Tri3" in big-endian US-ASCII (0x54726933) */
+            var signature = reader.ReadInt32();
+
+            // Check the signature.
+            switch (signature)
             {
-                // Enough data for a trie header?
-                if (bytes.remaining() < 16 /* sizeof(UCPTrieHeader) */)
-                {
-                    throw new ICUUncheckedIOException("Buffer too short for a CodePointTrie header");
-                }
-
-                // struct UCPTrieHeader
-                /* "Tri3" in big-endian US-ASCII (0x54726933) */
-                int signature = bytes.getInt();
-
-                // Check the signature.
-                switch (signature)
-                {
-                    case 0x54726933:
-                        // The buffer is already set to the trie data byte order.
-                        break;
-                    case 0x33697254:
-                        // Temporarily reverse the byte order.
-                        bool isBigEndian = outerByteOrder == ByteOrder.BIG_ENDIAN;
-                        bytes.order(isBigEndian ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
-                        // ReSharper disable once RedundantAssignment
-                        signature = 0x54726933;
-                        break;
-                    default:
-                        throw new ICUUncheckedIOException("Buffer does not contain a serialized CodePointTrie");
-                }
-
-                // struct UCPTrieHeader continued
-                /*
-                 * Options bit field:
-                 * Bits 15..12: Data length bits 19..16.
-                 * Bits 11..8: Data null block offset bits 19..16.
-                 * Bits 7..6: UCPTrieType
-                 * Bits 5..3: Reserved (0).
-                 * Bits 2..0: UCPTrieValueWidth
-                 */
-                int options = bytes.getChar();
-
-                /* Total length of the index tables. */
-                int indexLength = bytes.getChar();
-
-                /* Data length bits 15..0. */
-                int dataLength = bytes.getChar();
-
-                /* Index-3 null block offset, 0x7fff or 0xFFFF if none. */
-                int index3NullOffset = bytes.getChar();
-
-                /* Data null block offset bits 15..0, 0xFFFFf if none. */
-                int dataNullOffset = bytes.getChar();
-
-                /*
-                 * First code point of the single-value range ending with U+10ffff,
-                 * rounded up and then shifted right by SHIFT_2.
-                 */
-                int shiftedHighStart = bytes.getChar();
-                // struct UCPTrieHeader end
-
-                int typeInt = (options >> 6) & 3;
-                Kind actualKind;
-                switch (typeInt)
-                {
-                    case 0:
-                        actualKind = Kind.Fast;
-                        break;
-                    case 1:
-                        actualKind = Kind.Small;
-                        break;
-                    default:
-                        throw new ICUUncheckedIOException("CodePointTrie data header has an unsupported kind");
-                }
-
-                int valueWidthInt = options & OPTIONS_VALUE_BITS_MASK;
-                ValueWidth actualValueWidth;
-                switch (valueWidthInt)
-                {
-                    case 0:
-                        actualValueWidth = ValueWidth.Bits16;
-                        break;
-                    case 1:
-                        actualValueWidth = ValueWidth.Bits32;
-                        break;
-                    case 2:
-                        actualValueWidth = ValueWidth.Bits8;
-                        break;
-                    default:
-                        throw new ICUUncheckedIOException("CodePointTrie data header has an unsupported value width");
-                }
-
-                if ((options & OPTIONS_RESERVED_MASK) != 0)
-                {
-                    throw new ICUUncheckedIOException("CodePointTrie data header has unsupported options");
-                }
-
-                if (type == null)
-                {
-                    type = actualKind;
-                }
-
-                if (valueWidth == null)
-                {
-                    valueWidth = actualValueWidth;
-                }
-
-                if (type != actualKind || valueWidth != actualValueWidth)
-                {
-                    throw new ICUUncheckedIOException("CodePointTrie data header has a different kind or value width than required");
-                }
-
-                // Get the length values and offsets.
-                dataLength |= ((options & OPTIONS_DATA_LENGTH_MASK) << 4);
-                dataNullOffset |= ((options & OPTIONS_DATA_NULL_OFFSET_MASK) << 8);
-
-                int highStart = shiftedHighStart << SHIFT_2;
-
-                // Calculate the actual length, minus the header.
-                int actualLength = indexLength * 2;
-                if (valueWidth == ValueWidth.Bits16)
-                {
-                    actualLength += dataLength * 2;
-                }
-                else if (valueWidth == ValueWidth.Bits32)
-                {
-                    actualLength += dataLength * 4;
-                }
-                else
-                {
-                    actualLength += dataLength;
-                }
-
-                if (bytes.remaining() < actualLength)
-                {
-                    throw new ICUUncheckedIOException("Buffer too short for the CodePointTrie data");
-                }
-
-                char[] index = ICUBinary.getChars(bytes, indexLength, 0);
-                switch (valueWidth)
-                {
-                    case ValueWidth.Bits16:
-                    {
-                        char[] data16 = ICUBinary.getChars(bytes, dataLength, 0);
-                        return type == Kind.Fast
-                            ? (CodePointTrie) new Fast16(index, data16, highStart, index3NullOffset, dataNullOffset)
-                            : new Small16(index, data16, highStart, index3NullOffset, dataNullOffset);
-                    }
-                    case ValueWidth.Bits32:
-                    {
-                        int[] data32 = ICUBinary.getInts(bytes, dataLength, 0);
-                        return type == Kind.Fast
-                            ? (CodePointTrie) new Fast32(index, data32, highStart, index3NullOffset, dataNullOffset)
-                            : new Small32(index, data32, highStart, index3NullOffset, dataNullOffset);
-                    }
-                    case ValueWidth.Bits8:
-                    {
-                        byte[] data8 = ICUBinary.getBytes(bytes, dataLength, 0);
-                        return type == Kind.Fast
-                            ? (CodePointTrie) new Fast8(index, data8, highStart, index3NullOffset, dataNullOffset)
-                            : new Small8(index, data8, highStart, index3NullOffset, dataNullOffset);
-                    }
-                    default:
-                        throw new AssertionError("should be unreachable");
-                }
+                case 0x54726933:
+                    // The buffer is already set to the trie data byte order.
+                    break;
+                case 0x33697254:
+                    // Temporarily reverse the byte order.
+                    var isBigEndian = reader.Order() == ByteOrder.BigEndian;
+                    reader.Order(isBigEndian ? ByteOrder.LittleEndian : ByteOrder.BigEndian);
+                    break;
+                default:
+                    throw new ICUUncheckedIOException("Buffer does not contain a serialized CodePointTrie");
             }
-            finally
+
+            // struct UCPTrieHeader continued
+            /*
+             * Options bit field:
+             * Bits 15..12: Data length bits 19..16.
+             * Bits 11..8: Data null block offset bits 19..16.
+             * Bits 7..6: UCPTrieType
+             * Bits 5..3: Reserved (0).
+             * Bits 2..0: UCPTrieValueWidth
+             */
+            int options = reader.ReadUInt16();
+
+            /* Total length of the index tables. */
+            int indexLength = reader.ReadUInt16();
+
+            /* Data length bits 15..0. */
+            int dataLength = reader.ReadUInt16();
+
+            /* Index-3 null block offset, 0x7fff or 0xFFFF if none. */
+            int index3NullOffset = reader.ReadUInt16();
+
+            /* Data null block offset bits 15..0, 0xFFFFf if none. */
+            int dataNullOffset = reader.ReadUInt16();
+
+            /*
+             * First code point of the single-value range ending with U+10ffff,
+             * rounded up and then shifted right by SHIFT_2.
+             */
+            int shiftedHighStart = reader.ReadUInt16();
+            // struct UCPTrieHeader end
+
+            var typeInt = (options >> 6) & 3;
+            var actualKind = typeInt switch
             {
-                bytes.order(outerByteOrder);
+                0 => Kind.Fast,
+                1 => Kind.Small,
+                _ => throw new ICUUncheckedIOException("CodePointTrie data header has an unsupported kind")
+            };
+
+            var valueWidthInt = options & OPTIONS_VALUE_BITS_MASK;
+            var actualValueWidth = valueWidthInt switch
+            {
+                0 => ValueWidth.Bits16,
+                1 => ValueWidth.Bits32,
+                2 => ValueWidth.Bits8,
+                _ => throw new ICUUncheckedIOException("CodePointTrie data header has an unsupported value width")
+            };
+
+            if ((options & OPTIONS_RESERVED_MASK) != 0)
+            {
+                throw new ICUUncheckedIOException("CodePointTrie data header has unsupported options");
+            }
+
+            type ??= actualKind;
+
+            valueWidth ??= actualValueWidth;
+
+            if (type != actualKind || valueWidth != actualValueWidth)
+            {
+                throw new ICUUncheckedIOException("CodePointTrie data header has a different kind or value width than required");
+            }
+
+            // Get the length values and offsets.
+            dataLength |= ((options & OPTIONS_DATA_LENGTH_MASK) << 4);
+            dataNullOffset |= ((options & OPTIONS_DATA_NULL_OFFSET_MASK) << 8);
+
+            int highStart = shiftedHighStart << SHIFT_2;
+
+            // Calculate the actual length, minus the header.
+            var actualLength = indexLength * 2;
+            actualLength += valueWidth switch
+            {
+                ValueWidth.Bits16 => dataLength * 2,
+                ValueWidth.Bits32 => dataLength * 4,
+                _                 => dataLength
+            };
+
+            // TODO
+            // if (bytes.remaining() < actualLength)
+            // {
+            //     throw new ICUUncheckedIOException("Buffer too short for the CodePointTrie data");
+            // }
+
+            var index = ICUBinary.getChars(reader, indexLength, 0);
+            switch (valueWidth)
+            {
+                case ValueWidth.Bits16:
+                {
+                    var data16 = ICUBinary.getChars(reader, dataLength, 0);
+                    return type == Kind.Fast
+                        ? (CodePointTrie) new Fast16(index, data16, highStart, index3NullOffset, dataNullOffset)
+                        : new Small16(index, data16, highStart, index3NullOffset, dataNullOffset);
+                }
+                case ValueWidth.Bits32:
+                {
+                    var data32 = ICUBinary.getInts(reader, dataLength, 0);
+                    return type == Kind.Fast
+                        ? (CodePointTrie) new Fast32(index, data32, highStart, index3NullOffset, dataNullOffset)
+                        : new Small32(index, data32, highStart, index3NullOffset, dataNullOffset);
+                }
+                case ValueWidth.Bits8:
+                {
+                    var data8 = ICUBinary.getBytes(reader, dataLength, 0);
+                    return type == Kind.Fast
+                        ? (CodePointTrie) new Fast8(index, data8, highStart, index3NullOffset, dataNullOffset)
+                        : new Small8(index, data8, highStart, index3NullOffset, dataNullOffset);
+                }
+                default:
+                    throw new AssertionError("should be unreachable");
             }
         }
 
@@ -560,14 +528,14 @@ namespace CodeHive.unicode_trie
         public int ToBinary(Stream os)
         {
             // TODO Don't rely on character encoding, use explicit type when writing char (ushort)
-            using var bw = new BinaryWriter(os, Encoding.Unicode, true);
+            using var bw = new BinaryEndianWriter(os, Encoding.Unicode, true);
             // Write the UCPTrieHeader
             bw.Write(0x54726933); // signature="Tri3"
             bw.Write((ushort) // options
                 (((dataLength & 0xf0000) >> 4) |
-                ((dataNullOffset & 0xf0000) >> 8) |
-                ((int) GetKind() << 6) |
-                (int) GetValueWidth()));
+                 ((dataNullOffset & 0xf0000) >> 8) |
+                 ((int) GetKind() << 6) |
+                 (int) GetValueWidth()));
             bw.Write((ushort) index.Length);
             bw.Write((ushort) dataLength);
             bw.Write((ushort) index3NullOffset);
@@ -907,11 +875,11 @@ namespace CodeHive.unicode_trie
             /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
             ///                  if the valueWidth does not match the binary data;
             ///                  use null to accept any data value width</param>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Fast FromBinary(ValueWidth valueWidth, ByteBuffer bytes)
+            public static Fast FromBinary(ValueWidth valueWidth, Stream stream)
             {
-                return (Fast) CodePointTrie.FromBinary(Kind.Fast, valueWidth, bytes);
+                return (Fast) CodePointTrie.FromBinary(Kind.Fast, valueWidth, stream);
             }
 
             /// <returns><see cref="CodePointTrie.Kind.Fast"/></returns>
@@ -1059,11 +1027,11 @@ namespace CodeHive.unicode_trie
             /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
             ///                  if the valueWidth does not match the binary data;
             ///                  use null to accept any data value width</param>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Small FromBinary(ValueWidth valueWidth, ByteBuffer bytes)
+            public static Small FromBinary(ValueWidth valueWidth, Stream stream)
             {
-                return (Small) CodePointTrie.FromBinary(Kind.Small, valueWidth, bytes);
+                return (Small) CodePointTrie.FromBinary(Kind.Small, valueWidth, stream);
             }
 
             /// <returns><see cref="CodePointTrie.Kind.Small"/></returns>
@@ -1197,11 +1165,11 @@ namespace CodeHive.unicode_trie
             /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Fast"/>
             /// and <see cref="CodePointTrie.ValueWidth.Bits16"/>.
             /// </summary>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Fast16 FromBinary(ByteBuffer bytes)
+            public static Fast16 FromBinary(Stream stream)
             {
-                return (Fast16) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits16, bytes);
+                return (Fast16) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits16, stream);
             }
 
             /// <inheritdoc />
@@ -1245,11 +1213,11 @@ namespace CodeHive.unicode_trie
             /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Fast"/>
             /// and <see cref="CodePointTrie.ValueWidth.Bits32"/>.
             /// </summary>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Fast32 FromBinary(ByteBuffer bytes)
+            public static Fast32 FromBinary(Stream stream)
             {
-                return (Fast32) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits32, bytes);
+                return (Fast32) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits32, stream);
             }
 
             /// <inheritdoc />
@@ -1293,11 +1261,11 @@ namespace CodeHive.unicode_trie
             /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Fast"/>
             /// and <see cref="CodePointTrie.ValueWidth.Bits8"/>.
             /// </summary>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Fast8 FromBinary(ByteBuffer bytes)
+            public static Fast8 FromBinary(Stream stream)
             {
-                return (Fast8) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits8, bytes);
+                return (Fast8) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits8, stream);
             }
 
             /// <inheritdoc />
@@ -1337,11 +1305,11 @@ namespace CodeHive.unicode_trie
             /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Small"/>
             /// and <see cref="CodePointTrie.ValueWidth.Bits16"/>.
             /// </summary>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Small16 FromBinary(ByteBuffer bytes)
+            public static Small16 FromBinary(Stream stream)
             {
-                return (Small16) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits16, bytes);
+                return (Small16) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits16, stream);
             }
         }
 
@@ -1361,11 +1329,11 @@ namespace CodeHive.unicode_trie
             /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Small"/>
             /// and <see cref="CodePointTrie.ValueWidth.Bits32"/>.
             /// </summary>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Small32 FromBinary(ByteBuffer bytes)
+            public static Small32 FromBinary(Stream stream)
             {
-                return (Small32) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits32, bytes);
+                return (Small32) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits32, stream);
             }
         }
 
@@ -1385,11 +1353,11 @@ namespace CodeHive.unicode_trie
             /// Same as <see cref="CodePointTrie.FromBinary"/> with <see cref="CodePointTrie.Kind.Small"/>
             /// and <see cref="CodePointTrie.ValueWidth.Bits8"/>.
             /// </summary>
-            /// <param name="bytes">a buffer containing the binary data of a CodePointTrie</param>
+            /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
-            public static Small8 FromBinary(ByteBuffer bytes)
+            public static Small8 FromBinary(Stream stream)
             {
-                return (Small8) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits8, bytes);
+                return (Small8) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits8, stream);
             }
         }
     }

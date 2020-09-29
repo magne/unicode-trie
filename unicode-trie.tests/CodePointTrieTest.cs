@@ -498,11 +498,11 @@ namespace CodeHive.unicode_trie.tests
             do
             {
                 var trie = mutableTrie.BuildImmutable(kind, valueWidth);
-                var os = new MemoryStream();
-                var length1 = trie.ToBinary(os);
+                var stream = new MemoryStream();
+                var length1 = trie.ToBinary(stream);
                 // assertEquals(testName + ".toBinary() length", os.size(), length1);
-                Assert.Equal(length1, os.Length);
-                var storage = ByteBuffer.wrap(os.ToArray());
+                Assert.Equal(length1, stream.Length);
+                var storage = new MemoryStream(stream.ToArray());
                 // Java: no preflighting
 
                 TestTrie(testName, trie, kind, checkRanges);
@@ -523,7 +523,7 @@ namespace CodeHive.unicode_trie.tests
                     break;
                 }
 
-                if (os.Length != storage.position())
+                if (stream.Length != storage.Position)
                 {
                     Fail($"error: trie serialization ({testName}) lengths different: " +
                          "serialize vs. unserialize\n");
@@ -531,7 +531,7 @@ namespace CodeHive.unicode_trie.tests
                 }
 
                 {
-                    storage.rewind();
+                    storage.Position = 0;
                     var any = CodePointTrie.FromBinary(null, null, storage);
                     if (kind != any.GetKind())
                     {

@@ -1,44 +1,59 @@
 // ReSharper disable InconsistentNaming
 
-using CodeHive.unicode_trie.java;
+using System.IO;
 
 namespace CodeHive.unicode_trie.icu
 {
     internal static class ICUBinary
     {
-        public static void skipBytes(ByteBuffer bytes, int skipLength)
+        private static void skipBytes(BinaryReader reader, int skipLength)
         {
             if (skipLength > 0)
             {
-                bytes.position(bytes.position() + skipLength);
+                var stream = reader.BaseStream;
+                if (stream.CanSeek)
+                {
+                    stream.Seek(skipLength, SeekOrigin.Current);
+                }
+                else
+                {
+                    reader.ReadBytes(skipLength);
+                }
             }
         }
 
-        public static byte[] getBytes(ByteBuffer bytes, in int length, int additionalSkipLength)
+        internal static byte[] getBytes(BinaryReader reader, in int length, int additionalSkipLength)
         {
-            byte[] dest = new byte[length];
-            bytes.get(dest);
+            var dest = reader.ReadBytes(length);
             if (additionalSkipLength > 0)
             {
-                skipBytes(bytes, additionalSkipLength);
+                skipBytes(reader, additionalSkipLength);
             }
 
             return dest;
         }
 
-        public static char[] getChars(ByteBuffer bytes, in int length, int additionalSkipLength)
+        internal static char[] getChars(BinaryReader reader, in int length, int additionalSkipLength)
         {
-            char[] dest = new char[length];
-            bytes.asCharBuffer().get(dest);
-            skipBytes(bytes, length * 2 + additionalSkipLength);
+            var dest = new char[length];
+            for (var i = 0; i < length; ++i)
+            {
+                dest[i] = (char) reader.ReadUInt16();
+            }
+
+            skipBytes(reader, additionalSkipLength);
             return dest;
         }
 
-        public static int[] getInts(ByteBuffer bytes, in int length, int additionalSkipLength)
+        internal static int[] getInts(BinaryReader reader, in int length, int additionalSkipLength)
         {
-            int[] dest = new int[length];
-            bytes.asIntBuffer().get(dest);
-            skipBytes(bytes, length * 4 + additionalSkipLength);
+            var dest = new int[length];
+            for (var i = 0; i < length; ++i)
+            {
+                dest[i] = reader.ReadInt32();
+            }
+
+            skipBytes(reader, additionalSkipLength);
             return dest;
         }
     }

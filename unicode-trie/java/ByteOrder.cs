@@ -1,34 +1,32 @@
 using System;
 
-// ReSharper disable InconsistentNaming
-
 namespace CodeHive.unicode_trie.java
 {
     public class ByteOrder
     {
-        private                 String    name;
-        public static readonly  ByteOrder BIG_ENDIAN    = new ByteOrder("BIG_ENDIAN");
-        public static readonly  ByteOrder LITTLE_ENDIAN = new ByteOrder("LITTLE_ENDIAN");
-        private static readonly ByteOrder NATIVE_ORDER;
+        private readonly        string    name;
+        public static readonly  ByteOrder BigEndian    = new ByteOrder("BigEndian");
+        public static readonly  ByteOrder LittleEndian = new ByteOrder("LittleEndian");
+        private static readonly ByteOrder NativeOrder;
 
-        private ByteOrder(String name)
+        private ByteOrder(string name)
         {
             this.name = name;
         }
 
         public static ByteOrder nativeOrder()
         {
-            return NATIVE_ORDER;
+            return NativeOrder;
         }
 
-        public String toString()
+        public override string ToString()
         {
-            return this.name;
+            return name;
         }
 
         static ByteOrder()
         {
-            NATIVE_ORDER = BitConverter.IsLittleEndian ? LITTLE_ENDIAN : BIG_ENDIAN;
+            NativeOrder = BitConverter.IsLittleEndian ? LittleEndian : BigEndian;
         }
     }
 }
