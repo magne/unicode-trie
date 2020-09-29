@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using CodeHive.unicode_trie.icu;
 using CodeHive.unicode_trie.java;
 
@@ -558,37 +559,30 @@ namespace CodeHive.unicode_trie
         /// <returns>the number of bytes written</returns>
         public int ToBinary(Stream os)
         {
-            try
+            // TODO Don't rely on character encoding, use explicit type when writing char (ushort)
+            using var bw = new BinaryWriter(os, Encoding.Unicode, true);
+            // Write the UCPTrieHeader
+            bw.Write(0x54726933); // signature="Tri3"
+            bw.Write((ushort) // options
+                (((dataLength & 0xf0000) >> 4) |
+                ((dataNullOffset & 0xf0000) >> 8) |
+                ((int) GetKind() << 6) |
+                (int) GetValueWidth()));
+            bw.Write((ushort) index.Length);
+            bw.Write((ushort) dataLength);
+            bw.Write((ushort) index3NullOffset);
+            bw.Write((ushort) dataNullOffset);
+            bw.Write((ushort) (highStart >> SHIFT_2)); // shiftedHighStart
+            var length = 16; // sizeof(UCPTrieHeader)
+
+            foreach (var i in index)
             {
-                DataOutputStream dos = new DataOutputStream(os);
-
-                // Write the UCPTrieHeader
-                dos.writeInt(0x54726933); // signature="Tri3"
-                dos.writeChar( // options
-                    ((dataLength & 0xf0000) >> 4) |
-                    ((dataNullOffset & 0xf0000) >> 8) |
-                    ((int) GetKind() << 6) |
-                    (int) GetValueWidth());
-                dos.writeChar(index.Length);
-                dos.writeChar(dataLength);
-                dos.writeChar(index3NullOffset);
-                dos.writeChar(dataNullOffset);
-                dos.writeChar(highStart >> SHIFT_2); // shiftedHighStart
-                int length = 16; // sizeof(UCPTrieHeader)
-
-                foreach (char i in index)
-                {
-                    dos.writeChar(i);
-                }
-
-                length += index.Length * 2;
-                length += data.Write(dos);
-                return length;
+                bw.Write((ushort) i);
             }
-            catch (IOException e)
-            {
-                throw new ICUUncheckedIOException(e);
-            }
+
+            length += index.Length * 2;
+            length += data.Write(bw);
+            return length;
         }
 
         /** @internal */
@@ -693,7 +687,7 @@ namespace CodeHive.unicode_trie
             internal abstract ValueWidth GetValueWidth();
             internal abstract int GetDataLength();
             internal abstract int GetFromIndex(int index);
-            internal abstract int Write(DataOutputStream dos);
+            internal abstract int Write(BinaryWriter writer);
         }
 
         private class Data16 : Data
@@ -720,11 +714,11 @@ namespace CodeHive.unicode_trie
                 return array[index];
             }
 
-            internal override int Write(DataOutputStream dos)
+            internal override int Write(BinaryWriter writer)
             {
                 foreach (char v in array)
                 {
-                    dos.writeChar(v);
+                    writer.Write(v);
                 }
 
                 return array.Length * 2;
@@ -755,11 +749,11 @@ namespace CodeHive.unicode_trie
                 return array[index];
             }
 
-            internal override int Write(DataOutputStream dos)
+            internal override int Write(BinaryWriter writer)
             {
-                foreach (int v in array)
+                foreach (var v in array)
                 {
-                    dos.writeInt(v);
+                    writer.Write(v);
                 }
 
                 return array.Length * 4;
@@ -790,11 +784,11 @@ namespace CodeHive.unicode_trie
                 return array[index] & 0xff;
             }
 
-            internal override int Write(DataOutputStream dos)
+            internal override int Write(BinaryWriter writer)
             {
-                foreach (byte v in array)
+                foreach (var v in array)
                 {
-                    dos.writeByte(v);
+                    writer.Write(v);
                 }
 
                 return array.Length;
