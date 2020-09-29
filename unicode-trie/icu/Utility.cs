@@ -1,3 +1,5 @@
+// ReSharper disable InconsistentNaming
+
 namespace CodeHive.unicode_trie.icu
 {
     internal static class Utility

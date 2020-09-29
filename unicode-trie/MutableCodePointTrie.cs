@@ -1,6 +1,7 @@
 using System;
 using CodeHive.unicode_trie.java;
 
+// ReSharper disable InconsistentNaming
 
 namespace CodeHive.unicode_trie
 {

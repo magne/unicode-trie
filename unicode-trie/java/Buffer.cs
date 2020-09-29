@@ -8,8 +8,8 @@ namespace CodeHive.unicode_trie.java
     {
         internal static readonly Unsafe UNSAFE = Unsafe.getUnsafe();
 
-        private            int                mark      = -1;
-        private            int                _position = 0;
+        private            int                mark = -1;
+        private            int                _position;
         private            int                _limit;
         private            int                capacity;
         protected          long               address;
@@ -21,21 +21,19 @@ namespace CodeHive.unicode_trie.java
             {
                 throw createCapacityException(cap);
             }
-            else
-            {
-                this.capacity = cap;
-                this.segment = segment;
-                this.limit(lim);
-                this.position(pos);
-                if (mark >= 0)
-                {
-                    if (mark > pos)
-                    {
-                        throw new ArgumentException("mark > position: (" + mark + " > " + pos + ")");
-                    }
 
-                    this.mark = mark;
+            capacity = cap;
+            this.segment = segment;
+            limit(lim);
+            position(pos);
+            if (mark >= 0)
+            {
+                if (mark > pos)
+                {
+                    throw new ArgumentException("mark > position: (" + mark + " > " + pos + ")");
                 }
+
+                this.mark = mark;
             }
         }
 
@@ -48,33 +46,31 @@ namespace CodeHive.unicode_trie.java
 
         public int position()
         {
-            return this._position;
+            return _position;
         }
 
         public Buffer position(int newPosition)
         {
-            if (newPosition > this._limit | newPosition < 0)
+            if (newPosition > _limit | newPosition < 0)
             {
-                throw this.createPositionException(newPosition);
+                throw createPositionException(newPosition);
             }
-            else
-            {
-                this._position = newPosition;
-                if (this.mark > this._position)
-                {
-                    this.mark = -1;
-                }
 
-                return this;
+            _position = newPosition;
+            if (mark > _position)
+            {
+                mark = -1;
             }
+
+            return this;
         }
 
         private ArgumentException createPositionException(int newPosition)
         {
-            String msg = null;
-            if (newPosition > this._limit)
+            string msg;
+            if (newPosition > _limit)
             {
-                msg = "newPosition > limit: (" + newPosition + " > " + this._limit + ")";
+                msg = "newPosition > limit: (" + newPosition + " > " + _limit + ")";
             }
             else
             {
@@ -88,38 +84,36 @@ namespace CodeHive.unicode_trie.java
 
         public int limit()
         {
-            return this._limit;
+            return _limit;
         }
 
         public Buffer limit(int newLimit)
         {
-            if (newLimit > this.capacity | newLimit < 0)
+            if (newLimit > capacity | newLimit < 0)
             {
-                throw this.createLimitException(newLimit);
+                throw createLimitException(newLimit);
             }
-            else
+
+            _limit = newLimit;
+            if (_position > _limit)
             {
-                this._limit = newLimit;
-                if (this._position > this._limit)
-                {
-                    this._position = this._limit;
-                }
-
-                if (this.mark > this._limit)
-                {
-                    this.mark = -1;
-                }
-
-                return this;
+                _position = _limit;
             }
+
+            if (mark > _limit)
+            {
+                mark = -1;
+            }
+
+            return this;
         }
 
         private ArgumentException createLimitException(int newLimit)
         {
-            String msg = null;
-            if (newLimit > this.capacity)
+            string msg;
+            if (newLimit > capacity)
             {
-                msg = "newLimit > capacity: (" + newLimit + " > " + this.capacity + ")";
+                msg = "newLimit > capacity: (" + newLimit + " > " + capacity + ")";
             }
             else
             {
@@ -133,60 +127,51 @@ namespace CodeHive.unicode_trie.java
 
         public Buffer rewind()
         {
-            this._position = 0;
-            this.mark = -1;
+            _position = 0;
+            mark = -1;
             return this;
         }
 
         public int remaining()
         {
-            return this._limit - this._position;
+            return _limit - _position;
         }
 
         internal int nextGetIndex()
         {
-            if (this._position >= this._limit)
+            if (_position >= _limit)
             {
                 throw new Exception("BufferUnderflowException");
             }
-            else
-            {
-                return this._position++;
-            }
+
+            return _position++;
         }
 
         internal int nextGetIndex(int nb)
         {
-            if (this._limit - this._position < nb)
+            if (_limit - _position < nb)
             {
                 throw new Exception("BufferUnderflowException");
             }
-            else
-            {
-                int p = this._position;
-                this._position += nb;
-                return p;
-            }
+
+            int p = _position;
+            _position += nb;
+            return p;
         }
 
         internal int checkIndex(int i)
         {
-            if (i >= 0 && i < this._limit)
+            if (i >= 0 && i < _limit)
             {
                 return i;
             }
-            else
-            {
-                throw new Exception("IndexOutOfBoundsException");
-            }
+
+            throw new Exception("IndexOutOfBoundsException");
         }
 
         internal void checkSegment()
         {
-            if (this.segment != null)
-            {
-                this.segment.checkValidState();
-            }
+            segment?.checkValidState();
         }
     }
 }

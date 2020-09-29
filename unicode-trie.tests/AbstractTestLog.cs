@@ -7,7 +7,7 @@ namespace CodeHive.unicode_trie.tests
         /**
          * Report an error.
          */
-        public static void err(string message)
+        public static void Err(string message)
         {
             throw new XunitException(message);
             //msg(message, ERR, true, false);
@@ -16,7 +16,7 @@ namespace CodeHive.unicode_trie.tests
         /**
          * Report an error and newline.
          */
-        public static void errln(string message)
+        public static void ErrLn(string message)
         {
             throw new XunitException(message);
             //msg(message, ERR, true, true);

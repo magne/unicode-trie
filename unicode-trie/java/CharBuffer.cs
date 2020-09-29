@@ -17,7 +17,7 @@ namespace CodeHive.unicode_trie.java
         }
 
         internal CharBuffer(int mark, int pos, int lim, int cap, MemorySegmentProxy segment)
-            : this(mark, pos, lim, cap, (char[]) null, 0, segment)
+            : this(mark, pos, lim, cap, null, 0, segment)
         { }
 
         public abstract char get();
@@ -25,26 +25,24 @@ namespace CodeHive.unicode_trie.java
         public CharBuffer get(char[] dst, int offset, int length)
         {
             Objects.checkFromIndexSize(offset, length, dst.Length);
-            if (length > this.remaining())
+            if (length > remaining())
             {
                 throw new Exception("BufferUnderflowException");
             }
-            else
+
+            int end = offset + length;
+
+            for (int i = offset; i < end; ++i)
             {
-                int end = offset + length;
-
-                for (int i = offset; i < end; ++i)
-                {
-                    dst[i] = this.get();
-                }
-
-                return this;
+                dst[i] = get();
             }
+
+            return this;
         }
 
         public CharBuffer get(char[] dst)
         {
-            return this.get(dst, 0, dst.Length);
+            return get(dst, 0, dst.Length);
         }
     }
 }

@@ -5,12 +5,12 @@ namespace CodeHive.unicode_trie.tests
 {
     public class TestFmwk : AbstractTestLog
     {
-        protected static void fail()
+        protected static void Fail()
         {
-            fail("");
+            Fail("");
         }
 
-        protected static void fail(string message)
+        protected static void Fail(string message)
         {
             if (message == null)
             {
@@ -22,19 +22,19 @@ namespace CodeHive.unicode_trie.tests
                 message = ": " + message;
             }
 
-            errln(sourceLocation() + message);
+            ErrLn(SourceLocation() + message);
         }
 
         // Return the source code location of the caller located callDepth frames up the stack.
-        protected static string sourceLocation()
+        protected static string SourceLocation()
         {
             // Walk up the stack to the first call site outside this file
             foreach (var sf in new StackTrace(true).GetFrames())
             {
-                var source = sf.GetFileName();
+                var source = sf?.GetFileName();
                 if (source != null && !source.Equals("TestFmwk.cs") && !source.Equals("AbstractTestLog.cs"))
                 {
-                    var methodName = sf.GetMethod().Name;
+                    var methodName = sf.GetMethod()?.Name;
                     if (methodName != null &&
                         (methodName.StartsWith("Test") || methodName.StartsWith("test") || methodName.Equals("main")))
                     {

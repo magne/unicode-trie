@@ -17,13 +17,13 @@ namespace CodeHive.unicode_trie.tests.java
         {
             if (COMPACT_STRINGS)
             {
-                this.value = new byte[capacity];
-                this.coder = 0;
+                value = new byte[capacity];
+                coder = 0;
             }
             else
             {
-                this.value = StringUTF16.newBytesFor(capacity);
-                this.coder = 1;
+                value = StringUTF16.newBytesFor(capacity);
+                coder = 1;
             }
         }
 
@@ -34,57 +34,55 @@ namespace CodeHive.unicode_trie.tests.java
 
         private void ensureCapacityInternal(int minimumCapacity)
         {
-            int oldCapacity = this.value.Length >> this.coder;
+            int oldCapacity = value.Length >> coder;
             if (minimumCapacity - oldCapacity > 0)
             {
-                var newValue = new byte[this.newCapacity(minimumCapacity) << this.coder];
-                Array.Copy(this.value, newValue, this.value.Length);
-                this.value = newValue;
+                var newValue = new byte[newCapacity(minimumCapacity) << coder];
+                Array.Copy(value, newValue, value.Length);
+                value = newValue;
             }
         }
 
         private int newCapacity(int minCapacity)
         {
-            int oldCapacity = this.value.Length >> this.coder;
+            int oldCapacity = value.Length >> coder;
             int newCapacity = (oldCapacity << 1) + 2;
             if (newCapacity - minCapacity < 0)
             {
                 newCapacity = minCapacity;
             }
 
-            int SAFE_BOUND = 2147483639 >> this.coder;
-            return newCapacity > 0 && SAFE_BOUND - newCapacity >= 0 ? newCapacity : this.hugeCapacity(minCapacity);
+            int SAFE_BOUND = 2147483639 >> coder;
+            return newCapacity > 0 && SAFE_BOUND - newCapacity >= 0 ? newCapacity : hugeCapacity(minCapacity);
         }
 
         private int hugeCapacity(int minCapacity)
         {
-            int SAFE_BOUND = 2147483639 >> this.coder;
-            int UNSAFE_BOUND = 2147483647 >> this.coder;
+            int SAFE_BOUND = 2147483639 >> coder;
+            int UNSAFE_BOUND = 2147483647 >> coder;
             if (UNSAFE_BOUND - minCapacity < 0)
             {
                 throw new OutOfMemoryException();
             }
-            else
-            {
-                return minCapacity > SAFE_BOUND ? minCapacity : SAFE_BOUND;
-            }
+
+            return minCapacity > SAFE_BOUND ? minCapacity : SAFE_BOUND;
         }
 
         private void inflate()
         {
-            if (this.isLatin1())
+            if (isLatin1())
             {
-                byte[] buf = StringUTF16.newBytesFor(this.value.Length);
-                StringLatin1.inflate(this.value, 0, buf, 0, this.count);
-                this.value = buf;
-                this.coder = 1;
+                byte[] buf = StringUTF16.newBytesFor(value.Length);
+                StringLatin1.inflate(value, 0, buf, 0, count);
+                value = buf;
+                coder = 1;
             }
         }
 
         public char charAt(in int index)
         {
-            StringUTF16.checkIndex(index, this.count);
-            return this.isLatin1() ? (char) (this.value[index] & 255) : StringUTF16.charAt(this.value, index);
+            StringUTF16.checkIndex(index, count);
+            return isLatin1() ? (char) (value[index] & 255) : StringUTF16.charAt(value, index);
         }
 
         public int codePointAt(int index)
@@ -92,42 +90,40 @@ namespace CodeHive.unicode_trie.tests.java
             int count = this.count;
             byte[] value = this.value;
             StringUTF16.checkIndex(index, count);
-            return this.isLatin1() ? value[index] & 255 : StringUTF16.codePointAtSB(value, index, count);
+            return isLatin1() ? value[index] & 255 : StringUTF16.codePointAtSB(value, index, count);
         }
 
         public int codePointBefore(int index)
         {
             int i = index - 1;
-            if (i >= 0 && i < this.count)
+            if (i >= 0 && i < count)
             {
-                return this.isLatin1() ? this.value[i] & 255 : StringUTF16.codePointBeforeSB(this.value, index);
+                return isLatin1() ? value[i] & 255 : StringUTF16.codePointBeforeSB(value, index);
             }
-            else
-            {
-                throw new ArgumentException();
-            }
+
+            throw new ArgumentException();
         }
 
         public StringBuilder appendCodePoint(int codePoint)
         {
-            return Character.isBmpCodePoint(codePoint) ? this.append((char) codePoint) : this.append(Character.toChars(codePoint));
+            return Character.isBmpCodePoint(codePoint) ? append((char) codePoint) : append(Character.toChars(codePoint));
         }
 
         public StringBuilder append(char c)
         {
-            this.ensureCapacityInternal(this.count + 1);
-            if (this.isLatin1() && StringLatin1.canEncode(c))
+            ensureCapacityInternal(count + 1);
+            if (isLatin1() && StringLatin1.canEncode(c))
             {
-                this.value[this.count++] = (byte) c;
+                value[count++] = (byte) c;
             }
             else
             {
-                if (this.isLatin1())
+                if (isLatin1())
                 {
-                    this.inflate();
+                    inflate();
                 }
 
-                StringUTF16.putCharSB(this.value, this.count++, c);
+                StringUTF16.putCharSB(value, count++, c);
             }
 
             return this;
@@ -136,22 +132,22 @@ namespace CodeHive.unicode_trie.tests.java
         public StringBuilder append(char[] str)
         {
             int len = str.Length;
-            this.ensureCapacityInternal(this.count + len);
-            this.appendChars((char[]) str, 0, len);
+            ensureCapacityInternal(count + len);
+            appendChars(str, 0, len);
             return this;
         }
 
         private bool isLatin1()
         {
-            return COMPACT_STRINGS && this.coder == 0;
+            return COMPACT_STRINGS && coder == 0;
         }
 
         private void appendChars(char[] s, int off, int end)
         {
             int count = this.count;
-            if (this.isLatin1())
+            if (isLatin1())
             {
-                byte[] val = this.value;
+                byte[] val = value;
                 int i = off;
 
                 for (int j = count; i < end; ++i)
@@ -160,8 +156,8 @@ namespace CodeHive.unicode_trie.tests.java
                     if (!StringLatin1.canEncode(c))
                     {
                         this.count = j;
-                        this.inflate();
-                        StringUTF16.putCharsSB(this.value, j, s, i, end);
+                        inflate();
+                        StringUTF16.putCharsSB(value, j, s, i, end);
                         this.count = j + end - i;
                         return;
                     }
@@ -171,7 +167,7 @@ namespace CodeHive.unicode_trie.tests.java
             }
             else
             {
-                StringUTF16.putCharsSB(this.value, count, s, off, end);
+                StringUTF16.putCharsSB(value, count, s, off, end);
             }
 
             this.count = count + end - off;

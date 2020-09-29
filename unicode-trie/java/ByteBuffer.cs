@@ -14,15 +14,15 @@ namespace CodeHive.unicode_trie.java
         private ByteBuffer(int mark, in int pos, int lim, in int cap, byte[] hb, int offset, MemorySegmentProxy segment)
             : base(mark, pos, lim, cap, segment)
         {
-            this.bigEndian = true;
-            this.nativeByteOrder = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
+            bigEndian = true;
+            nativeByteOrder = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
             this.hb = hb;
             this.offset = offset;
         }
 
         private static ByteBuffer wrap(byte[] array, int offset, int length)
         {
-            return new HeapByteBuffer(array, offset, length, (MemorySegmentProxy) null);
+            return new HeapByteBuffer(array, offset, length, null);
         }
 
         public static ByteBuffer wrap(byte[] array)
@@ -37,26 +37,24 @@ namespace CodeHive.unicode_trie.java
         public ByteBuffer get(byte[] dst, int offset, int length)
         {
             Objects.checkFromIndexSize(offset, length, dst.Length);
-            if (length > this.remaining())
+            if (length > remaining())
             {
                 throw new Exception("BufferUnderflowException");
             }
-            else
+
+            int end = offset + length;
+
+            for (int i = offset; i < end; ++i)
             {
-                int end = offset + length;
-
-                for (int i = offset; i < end; ++i)
-                {
-                    dst[i] = this.get();
-                }
-
-                return this;
+                dst[i] = get();
             }
+
+            return this;
         }
 
         public ByteBuffer get(byte[] dst)
         {
-            return this.get(dst, 0, dst.Length);
+            return get(dst, 0, dst.Length);
         }
 
         public new ByteBuffer position(int newPosition)
@@ -73,13 +71,13 @@ namespace CodeHive.unicode_trie.java
 
         public ByteOrder order()
         {
-            return this.bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+            return bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
         }
 
         public ByteBuffer order(ByteOrder bo)
         {
-            this.bigEndian = bo == ByteOrder.BIG_ENDIAN;
-            this.nativeByteOrder = this.bigEndian == (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN);
+            bigEndian = bo == ByteOrder.BIG_ENDIAN;
+            nativeByteOrder = bigEndian == (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN);
             return this;
         }
 
@@ -98,68 +96,68 @@ namespace CodeHive.unicode_trie.java
 
             static HeapByteBuffer()
             {
-                ARRAY_BASE_OFFSET = (long) UNSAFE.arrayBaseOffset(typeof(byte[]));
-                ARRAY_INDEX_SCALE = (long) UNSAFE.arrayIndexScale(typeof(byte[]));
+                ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(typeof(byte[]));
+                ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(typeof(byte[]));
             }
 
             public HeapByteBuffer(byte[] buf, int off, int len, MemorySegmentProxy segment)
                 : base(-1, off, off + len, buf.Length, buf, 0, segment)
             {
-                this.address = ARRAY_BASE_OFFSET;
+                address = ARRAY_BASE_OFFSET;
             }
 
             protected int ix(int i)
             {
-                return i + this.offset;
+                return i + offset;
             }
 
             private long byteOffset(long i)
             {
-                return this.address + i;
+                return address + i;
             }
 
             public override byte get()
             {
-                this.checkSegment();
-                return this.hb[this.ix(this.nextGetIndex())];
+                checkSegment();
+                return hb[ix(nextGetIndex())];
             }
 
             public override byte get(int i)
             {
-                this.checkSegment();
-                return this.hb[this.ix(this.checkIndex(i))];
+                checkSegment();
+                return hb[ix(checkIndex(i))];
             }
 
             public override char getChar()
             {
-                this.checkSegment();
-                return UNSAFE.getCharUnaligned(this.hb, this.byteOffset((long) this.nextGetIndex(2)), this.bigEndian);
+                checkSegment();
+                return UNSAFE.getCharUnaligned(hb, byteOffset(nextGetIndex(2)), bigEndian);
             }
 
             public override CharBuffer asCharBuffer()
             {
-                int pos = this.position();
-                int size = this.limit() - pos >> 1;
-                long addr = this.address + (long) pos;
-                return this.bigEndian
-                    ? (CharBuffer) new ByteBufferAsCharBufferB(this, -1, 0, size, size, addr, this.segment)
-                    : new ByteBufferAsCharBufferL(this, -1, 0, size, size, addr, this.segment);
+                int pos = position();
+                int size = limit() - pos >> 1;
+                long addr = address + pos;
+                return bigEndian
+                    ? (CharBuffer) new ByteBufferAsCharBufferB(this, -1, 0, size, size, addr, segment)
+                    : new ByteBufferAsCharBufferL(this, -1, 0, size, size, addr, segment);
             }
 
             public override int getInt()
             {
-                this.checkSegment();
-                return UNSAFE.getIntUnaligned(this.hb, this.byteOffset((long) this.nextGetIndex(4)), this.bigEndian);
+                checkSegment();
+                return UNSAFE.getIntUnaligned(hb, byteOffset(nextGetIndex(4)), bigEndian);
             }
 
             public override IntBuffer asIntBuffer()
             {
-                int pos = this.position();
-                int size = this.limit() - pos >> 2;
-                long addr = this.address + (long) pos;
-                return (this.bigEndian
-                    ? (IntBuffer) new ByteBufferAsIntBufferB(this, -1, 0, size, size, addr, this.segment)
-                    : new ByteBufferAsIntBufferL(this, -1, 0, size, size, addr, this.segment));
+                int pos = position();
+                int size = limit() - pos >> 2;
+                long addr = address + pos;
+                return (bigEndian
+                    ? (IntBuffer) new ByteBufferAsIntBufferB(this, -1, 0, size, size, addr, segment)
+                    : new ByteBufferAsIntBufferL(this, -1, 0, size, size, addr, segment));
             }
         }
     }

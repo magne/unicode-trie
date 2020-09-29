@@ -92,7 +92,7 @@ namespace CodeHive.unicode_trie.java
         {
             if (isBmpCodePoint(codePoint))
             {
-                return new char[] {(char) codePoint};
+                return new[] {(char) codePoint};
             }
             else if (isValidCodePoint(codePoint))
             {
