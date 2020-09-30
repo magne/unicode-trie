@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using CodeHive.unicode_trie.icu;
@@ -253,7 +254,7 @@ namespace CodeHive.unicode_trie
                         : new Small8(index, data8, highStart, index3NullOffset, dataNullOffset);
                 }
                 default:
-                    throw new AssertionError("should be unreachable");
+                    throw new InvalidOperationException("should be unreachable");
             }
         }
 
@@ -362,12 +363,12 @@ namespace CodeHive.unicode_trie
                     int i1 = c >> SHIFT_1;
                     if (kind == Kind.Fast)
                     {
-                        Assert(0xFFFF < c && c < highStart);
+                        Debug.Assert(0xFFFF < c && c < highStart);
                         i1 += BMP_INDEX_LENGTH - OMITTED_BMP_INDEX_1_LENGTH;
                     }
                     else
                     {
-                        Assert(c < highStart && highStart > SMALL_LIMIT);
+                        Debug.Assert(c < highStart && highStart > SMALL_LIMIT);
                         i1 += SMALL_INDEX_LENGTH;
                     }
 
@@ -375,7 +376,7 @@ namespace CodeHive.unicode_trie
                     if (i3Block == prevI3Block && (c - start) >= CP_PRE_INDEX_2_ENTRY)
                     {
                         // The index-3 block is the same as the previous one, and filled with value.
-                        Assert((c & (CP_PRE_INDEX_2_ENTRY - 1)) == 0);
+                        Debug.Assert((c & (CP_PRE_INDEX_2_ENTRY - 1)) == 0);
                         c += CP_PRE_INDEX_2_ENTRY;
                         continue;
                     }
@@ -429,7 +430,7 @@ namespace CodeHive.unicode_trie
                     if (block == prevBlock && (c - start) >= dataBlockLength)
                     {
                         // The block is the same as the previous one, and filled with value.
-                        Assert((c & (dataBlockLength - 1)) == 0);
+                        Debug.Assert((c & (dataBlockLength - 1)) == 0);
                         c += dataBlockLength;
                     }
                     else
@@ -503,7 +504,7 @@ namespace CodeHive.unicode_trie
                 } while (++i3 < i3BlockLength);
             } while (c < highStart);
 
-            Assert(haveValue);
+            Debug.Assert(haveValue);
             int di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
             int highValue = data.GetFromIndex(di);
             if (MaybeFilterValue(highValue, this.nullValue, nullValue, filter) != value)
@@ -824,12 +825,12 @@ namespace CodeHive.unicode_trie
             int i1 = c >> SHIFT_1;
             if (kind == Kind.Fast)
             {
-                Assert(0xFFFF < c && c < highStart);
+                Debug.Assert(0xFFFF < c && c < highStart);
                 i1 += BMP_INDEX_LENGTH - OMITTED_BMP_INDEX_1_LENGTH;
             }
             else
             {
-                Assert(0 <= c && c < highStart && highStart > SMALL_LIMIT);
+                Debug.Assert(0 <= c && c < highStart && highStart > SMALL_LIMIT);
                 i1 += SMALL_INDEX_LENGTH;
             }
 
@@ -1181,14 +1182,14 @@ namespace CodeHive.unicode_trie
             /// <inheritdoc />
             public override int BmpGet(int c)
             {
-                Assert(0 <= c && c <= 0xFFFF);
+                Debug.Assert(0 <= c && c <= 0xFFFF);
                 return dataArray[FastIndex(c)];
             }
 
             /// <inheritdoc />
             public override int SuppGet(int c)
             {
-                Assert(0x10000 <= c && c <= 0x10ffff);
+                Debug.Assert(0x10000 <= c && c <= 0x10ffff);
                 return dataArray[SmallIndex(Kind.Fast, c)];
             }
         }
@@ -1229,14 +1230,14 @@ namespace CodeHive.unicode_trie
             /// <inheritdoc />
             public override int BmpGet(int c)
             {
-                Assert(0 <= c && c <= 0xFFFF);
+                Debug.Assert(0 <= c && c <= 0xFFFF);
                 return dataArray[FastIndex(c)];
             }
 
             /// <inheritdoc />
             public override int SuppGet(int c)
             {
-                Assert(0x10000 <= c && c <= 0x10ffff);
+                Debug.Assert(0x10000 <= c && c <= 0x10ffff);
                 return dataArray[SmallIndex(Kind.Fast, c)];
             }
         }
@@ -1277,14 +1278,14 @@ namespace CodeHive.unicode_trie
             /// <inheritdoc />
             public override int BmpGet(int c)
             {
-                Assert(0 <= c && c <= 0xFFFF);
+                Debug.Assert(0 <= c && c <= 0xFFFF);
                 return dataArray[FastIndex(c)] & 0xff;
             }
 
             /// <inheritdoc />
             public override int SuppGet(int c)
             {
-                Assert(0x10000 <= c && c <= 0x10ffff);
+                Debug.Assert(0x10000 <= c && c <= 0x10ffff);
                 return dataArray[SmallIndex(Kind.Fast, c)] & 0xff;
             }
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using CodeHive.unicode_trie.java;
 
 // ReSharper disable InconsistentNaming
@@ -68,7 +69,7 @@ namespace CodeHive.unicode_trie
             builder.errorValue = errorValue;
             builder.highStart = highStart;
             builder.highValue = highValue;
-            Assert(index16 == null);
+            Debug.Assert(index16 == null);
             return builder;
         }
 
@@ -266,7 +267,7 @@ namespace CodeHive.unicode_trie
             } while (c < highStart);
 
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            Assert(haveValue);
+            Debug.Assert(haveValue);
             if (MaybeFilterValue(highValue, initialValue, nullValue, filter) != value)
             {
                 range.Set(start, c - 1, value);
@@ -520,7 +521,7 @@ namespace CodeHive.unicode_trie
                     // Should never occur.
                     // Either MAX_DATA_LENGTH is incorrect,
                     // or the code writes more values than should be possible.
-                    throw new AssertionError();
+                    throw new InvalidOperationException("should be unreachable");
                 }
 
                 int[] newData = new int[capacity];
@@ -554,7 +555,7 @@ namespace CodeHive.unicode_trie
                 int iLimit = iStart + SMALL_DATA_BLOCKS_PER_BMP_BLOCK;
                 do
                 {
-                    Assert(flags[iStart] == ALL_SAME);
+                    Debug.Assert(flags[iStart] == ALL_SAME);
                     WriteBlock(newBlock, index[iStart]);
                     flags[iStart] = MIXED;
                     index[iStart++] = newBlock;
@@ -703,7 +704,7 @@ namespace CodeHive.unicode_trie
         private static int GetOverlap(int[] p, int length, int[] q, int qStart, int blockLength)
         {
             int overlap = blockLength - 1;
-            Assert(overlap <= length);
+            Debug.Assert(overlap <= length);
             while (overlap > 0 && !EqualBlocks(p, length - overlap, q, qStart, overlap))
             {
                 --overlap;
@@ -715,7 +716,7 @@ namespace CodeHive.unicode_trie
         private static int GetOverlap(char[] p, int length, int[] q, int qStart, int blockLength)
         {
             int overlap = blockLength - 1;
-            Assert(overlap <= length);
+            Debug.Assert(overlap <= length);
             while (overlap > 0 && !EqualBlocks(p, length - overlap, q, qStart, overlap))
             {
                 --overlap;
@@ -727,7 +728,7 @@ namespace CodeHive.unicode_trie
         private static int GetOverlap(char[] p, int length, char[] q, int qStart, int blockLength)
         {
             int overlap = blockLength - 1;
-            Assert(overlap <= length);
+            Debug.Assert(overlap <= length);
             while (overlap > 0 && !EqualBlocks(p, length - overlap, q, qStart, overlap))
             {
                 --overlap;
@@ -846,12 +847,12 @@ namespace CodeHive.unicode_trie
             /** Replaces the block which has the lowest reference count. */
             internal void Add(int index, int count, int value)
             {
-                Assert(length == CAPACITY);
+                Debug.Assert(length == CAPACITY);
                 int least = -1;
                 int leastCount = I_LIMIT;
                 for (int i = 0; i < length; ++i)
                 {
-                    Assert(values[i] != value);
+                    Debug.Assert(values[i] != value);
                     if (refCounts[i] < leastCount)
                     {
                         least = i;
@@ -859,7 +860,7 @@ namespace CodeHive.unicode_trie
                     }
                 }
 
-                Assert(least >= 0);
+                Debug.Assert(least >= 0);
                 mostRecent = least;
                 indexes[least] = index;
                 values[least] = value;
@@ -1080,7 +1081,7 @@ namespace CodeHive.unicode_trie
 
             private void AddEntry(int[] data32, char[] data16, int blockStart, int hashCode, int dataIndex)
             {
-                Assert(0 <= dataIndex && dataIndex < mask);
+                Debug.Assert(0 <= dataIndex && dataIndex < mask);
                 int entryIndex = FindEntry(data32, data16, data32, data16, blockStart, hashCode);
                 if (entryIndex < 0)
                 {
@@ -1212,7 +1213,7 @@ namespace CodeHive.unicode_trie
                 }
                 else
                 {
-                    Assert(flags[i] == ALL_SAME);
+                    Debug.Assert(flags[i] == ALL_SAME);
                     if (inc > 1)
                     {
                         // Do all of the fast-range data block's ALL_SAME parts have the same value?
@@ -1220,7 +1221,7 @@ namespace CodeHive.unicode_trie
                         int next_i = i + inc;
                         for (int j = i + 1; j < next_i; ++j)
                         {
-                            Assert(flags[j] == ALL_SAME);
+                            Debug.Assert(flags[j] == ALL_SAME);
                             if (index[j] != value)
                             {
                                 allSame = false;
@@ -1602,8 +1603,8 @@ namespace CodeHive.unicode_trie
                 }
                 else
                 {
-                    Assert(f == I3_18);
-                    Assert(hasLongI3Blocks);
+                    Debug.Assert(f == I3_18);
+                    Debug.Assert(hasLongI3Blocks);
                     // Encode an index-3 block that contains one or more data indexes exceeding 16 bits.
                     int j = i;
                     int jLimit = i + CodePointTrie.INDEX_3_BLOCK_LENGTH;
@@ -1688,8 +1689,8 @@ namespace CodeHive.unicode_trie
                 index2[i2Length++] = (char) i3;
             }
 
-            Assert(i2Length == index2Capacity);
-            Assert(indexLength <= index3Start + index3Capacity);
+            Debug.Assert(i2Length == index2Capacity);
+            Debug.Assert(indexLength <= index3Start + index3Capacity);
 
             if (index3NullOffset < 0)
             {
@@ -1714,7 +1715,7 @@ namespace CodeHive.unicode_trie
                 if ((i2Length - i) >= blockLength)
                 {
                     // normal block
-                    Assert(blockLength == CodePointTrie.INDEX_2_BLOCK_LENGTH);
+                    Debug.Assert(blockLength == CodePointTrie.INDEX_2_BLOCK_LENGTH);
                     n = mixedBlocks.FindBlock(index16, index2, i);
                 }
                 else
@@ -1756,8 +1757,8 @@ namespace CodeHive.unicode_trie
                 index16[i1++] = (char) i2;
             }
 
-            Assert(i1 == index3Start);
-            Assert(indexLength <= index16Capacity);
+            Debug.Assert(i1 == index3Start);
+            Debug.Assert(indexLength <= index16Capacity);
 
             return indexLength;
         }
@@ -1765,7 +1766,7 @@ namespace CodeHive.unicode_trie
         private int CompactTrie(int fastILimit)
         {
             // Find the real highStart and round it up.
-            Assert((highStart & (CodePointTrie.CP_PRE_INDEX_2_ENTRY - 1)) == 0);
+            Debug.Assert((highStart & (CodePointTrie.CP_PRE_INDEX_2_ENTRY - 1)) == 0);
             highValue = Get(MAX_UNICODE);
             int realHighStart = FindHighStart();
             realHighStart = (realHighStart + (CodePointTrie.CP_PRE_INDEX_2_ENTRY - 1)) &
@@ -1812,7 +1813,7 @@ namespace CodeHive.unicode_trie
 
             MixedBlocks mixedBlocks = new MixedBlocks();
             int newDataLength = CompactData(fastILimit, newData, dataNullIndex, mixedBlocks);
-            Assert(newDataLength <= newDataCapacity);
+            Debug.Assert(newDataLength <= newDataCapacity);
             data = newData;
             dataLength = newDataLength;
             if (dataLength > (0x3ffff + CodePointTrie.SMALL_DATA_BLOCK_LENGTH))
@@ -1925,7 +1926,7 @@ namespace CodeHive.unicode_trie
                 length += dataLength;
             }
 
-            Assert((length & 3) == 0);
+            Debug.Assert((length & 3) == 0);
 
             // Fill the index and data arrays.
             char[] trieIndex;

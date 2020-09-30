@@ -425,13 +425,5 @@ namespace CodeHive.unicode_trie
         {
             return new StringIterator(this, s, sIndex);
         }
-
-        internal static void Assert(bool expression)
-        {
-            if (!expression)
-            {
-                throw new AssertionError();
-            }
-        }
     }
 }
