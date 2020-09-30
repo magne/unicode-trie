@@ -951,7 +951,7 @@ namespace CodeHive.unicode_trie
                     char lead = s.charAt(sIndex++);
                     c = lead;
                     int dataIndex;
-                    if (!Character.isSurrogate(lead))
+                    if (!char.IsSurrogate(lead))
                     {
                         dataIndex = trie.FastIndex(c);
                     }
@@ -959,7 +959,7 @@ namespace CodeHive.unicode_trie
                     {
                         char trail;
                         if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && sIndex < s.length() &&
-                            Character.isLowSurrogate(trail = s.charAt(sIndex)))
+                            char.IsLowSurrogate(trail = s.charAt(sIndex)))
                         {
                             ++sIndex;
                             c = Character.toCodePoint(lead, trail);
@@ -985,7 +985,7 @@ namespace CodeHive.unicode_trie
                     char trail = s.charAt(--sIndex);
                     c = trail;
                     int dataIndex;
-                    if (!Character.isSurrogate(trail))
+                    if (!char.IsSurrogate(trail))
                     {
                         dataIndex = trie.FastIndex(c);
                     }
@@ -993,7 +993,7 @@ namespace CodeHive.unicode_trie
                     {
                         char lead;
                         if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && sIndex > 0 &&
-                            Character.isHighSurrogate(lead = s.charAt(sIndex - 1)))
+                            char.IsHighSurrogate(lead = s.charAt(sIndex - 1)))
                         {
                             --sIndex;
                             c = Character.toCodePoint(lead, trail);
@@ -1086,7 +1086,7 @@ namespace CodeHive.unicode_trie
                     char lead = s.charAt(sIndex++);
                     c = lead;
                     int dataIndex;
-                    if (!Character.isSurrogate(lead))
+                    if (!char.IsSurrogate(lead))
                     {
                         dataIndex = trie.cpIndex(c);
                     }
@@ -1094,7 +1094,7 @@ namespace CodeHive.unicode_trie
                     {
                         char trail;
                         if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && sIndex < s.length() &&
-                            Character.isLowSurrogate(trail = s.charAt(sIndex)))
+                            char.IsLowSurrogate(trail = s.charAt(sIndex)))
                         {
                             ++sIndex;
                             c = Character.toCodePoint(lead, trail);
@@ -1120,7 +1120,7 @@ namespace CodeHive.unicode_trie
                     char trail = s.charAt(--sIndex);
                     c = trail;
                     int dataIndex;
-                    if (!Character.isSurrogate(trail))
+                    if (!char.IsSurrogate(trail))
                     {
                         dataIndex = trie.cpIndex(c);
                     }
@@ -1128,7 +1128,7 @@ namespace CodeHive.unicode_trie
                     {
                         char lead;
                         if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && sIndex > 0 &&
-                            Character.isHighSurrogate(lead = s.charAt(sIndex - 1)))
+                            char.IsHighSurrogate(lead = s.charAt(sIndex - 1)))
                         {
                             --sIndex;
                             c = Character.toCodePoint(lead, trail);

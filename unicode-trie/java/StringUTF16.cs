@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 // ReSharper disable InconsistentNaming
 
@@ -28,69 +29,68 @@ namespace CodeHive.unicode_trie.java
             return !BitConverter.IsLittleEndian;
         }
 
-        const int MAX_LENGTH = 1073741823;
+        private const int MAX_LENGTH = 1073741823;
 
-        public static byte[] newBytesFor(in int len)
+        internal static byte[] newBytesFor(in int len)
         {
             if (len < 0)
             {
                 throw new ArgumentException();
             }
-            else if (len > MAX_LENGTH)
+
+            if (len > MAX_LENGTH)
             {
                 throw new InsufficientMemoryException("UTF16 String size is " + len + ", should be less than " + 1073741823);
             }
-            else
-            {
-                return new byte[len << 1];
-            }
+
+            return new byte[len << 1];
         }
 
-        public static char charAt(byte[] value, int index)
+        internal static char charAt(byte[] value, int index)
         {
             checkIndex(index, value);
             return getChar(value, index);
         }
 
-        public static void checkIndex(int off, byte[] val)
+        private static void checkIndex(int off, byte[] val)
         {
             checkIndex(off, length(val));
         }
 
-        public static int length(byte[] value)
+        private static int length(byte[] value)
         {
             return value.Length >> 1;
         }
 
-        static char getChar(byte[] val, int index)
+        private static char getChar(byte[] val, int index)
         {
-            // TODO assert index >= 0 && index < length(val) : "Trusted caller missed bounds check";
+            Debug.Assert(index >= 0 && index < length(val), "Trusted caller missed bounds check");
 
             index <<= 1;
             return (char) ((val[index++] & 255) << HI_BYTE_SHIFT | (val[index] & 255) << LO_BYTE_SHIFT);
         }
 
-        public static int codePointAtSB(byte[] val, int index, int end)
+        internal static int codePointAtSB(byte[] val, int index, int end)
         {
             return codePointAt(val, index, end, true);
         }
 
-        public static int codePointBeforeSB(byte[] val, int index)
+        internal static int codePointBeforeSB(byte[] val, int index)
         {
             return codePointBefore(val, index, true);
         }
 
         private static int codePointAt(byte[] value, int index, int end, bool @checked)
         {
-            // TODO assert index < end;
+            Debug.Assert(index < end);
 
             if (@checked)
             {
                 checkIndex(index, value);
             }
 
-            char c1 = getChar(value, index);
-            if (Character.isHighSurrogate(c1))
+            var c1 = getChar(value, index);
+            if (char.IsHighSurrogate(c1))
             {
                 ++index;
                 if (index < end)
@@ -100,8 +100,8 @@ namespace CodeHive.unicode_trie.java
                         checkIndex(index, value);
                     }
 
-                    char c2 = getChar(value, index);
-                    if (Character.isLowSurrogate(c2))
+                    var c2 = getChar(value, index);
+                    if (char.IsLowSurrogate(c2))
                     {
                         return Character.toCodePoint(c1, c2);
                     }
@@ -119,8 +119,8 @@ namespace CodeHive.unicode_trie.java
                 checkIndex(index, value);
             }
 
-            char c2 = getChar(value, index);
-            if (Character.isLowSurrogate(c2) && index > 0)
+            var c2 = getChar(value, index);
+            if (char.IsLowSurrogate(c2) && index > 0)
             {
                 --index;
                 if (@checked)
@@ -128,8 +128,8 @@ namespace CodeHive.unicode_trie.java
                     checkIndex(index, value);
                 }
 
-                char c1 = getChar(value, index);
-                if (Character.isHighSurrogate(c1))
+                var c1 = getChar(value, index);
+                if (char.IsHighSurrogate(c1))
                 {
                     return Character.toCodePoint(c1, c2);
                 }
@@ -138,11 +138,11 @@ namespace CodeHive.unicode_trie.java
             return c2;
         }
 
-        public static void inflate(byte[] src, int srcOff, byte[] dst, int dstOff, int len)
+        internal static void inflate(byte[] src, int srcOff, byte[] dst, int dstOff, int len)
         {
             checkBoundsOffCount(dstOff, len, dst);
 
-            for (int i = 0; i < len; ++i)
+            for (var i = 0; i < len; ++i)
             {
                 putChar(dst, dstOff++, src[srcOff++] & 255);
             }
@@ -156,19 +156,19 @@ namespace CodeHive.unicode_trie.java
             }
         }
 
-        public static void putCharSB(byte[] val, int index, int c)
+        internal static void putCharSB(byte[] val, int index, int c)
         {
             checkIndex(index, val);
             putChar(val, index, c);
         }
 
-        public static void putCharsSB(byte[] val, int index, char[] ca, int off, int end)
+        internal static void putCharsSB(byte[] val, int index, char[] ca, int off, int end)
         {
             checkBoundsBeginEnd(index, index + end - off, val);
             putChars(val, index, ca, off, end);
         }
 
-        static void putChar(byte[] val, int index, int c)
+        private static void putChar(byte[] val, int index, int c)
         {
             // TODO assert index >= 0 && index < length(val) : "Trusted caller missed bounds check";
 
@@ -177,12 +177,12 @@ namespace CodeHive.unicode_trie.java
             val[index] = (byte) (c >> LO_BYTE_SHIFT);
         }
 
-        public static void checkBoundsOffCount(int offset, int count, byte[] val)
+        private static void checkBoundsOffCount(int offset, int count, byte[] val)
         {
             checkBoundsOffCount(offset, count, length(val));
         }
 
-        public static void checkBoundsBeginEnd(int begin, int end, byte[] val)
+        private static void checkBoundsBeginEnd(int begin, int end, byte[] val)
         {
             if (begin < 0 || begin > end || end > length(val))
             {
@@ -190,7 +190,7 @@ namespace CodeHive.unicode_trie.java
             }
         }
 
-        static void checkBoundsOffCount(int offset, int count, int length)
+        private static void checkBoundsOffCount(int offset, int count, int length)
         {
             if (offset < 0 || count < 0 || offset > length - count)
             {

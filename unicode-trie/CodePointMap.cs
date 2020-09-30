@@ -41,7 +41,7 @@ namespace CodeHive.unicode_trie
             /// surrogates, but those values are not to be associated with the lead surrogate code
             /// *points*.
             ///
-            /// <seealso cref="Character.isHighSurrogate"/>
+            /// <seealso cref="char.IsHighSurrogate(char)"/>
             /// </summary>
             FixedLeadSurrogates,
 
@@ -58,7 +58,7 @@ namespace CodeHive.unicode_trie
             /// surrogates, but those values are not to be associated with the lead surrogate code
             /// *points*.
             ///
-            /// <seealso cref="Character.isSurrogate"/>
+            /// <seealso cref="char.IsSurrogate(char)"/>
             /// </summary>
             FixedAllSurrogates,
         }

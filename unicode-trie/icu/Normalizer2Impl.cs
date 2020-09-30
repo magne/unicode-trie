@@ -20,7 +20,7 @@ namespace CodeHive.unicode_trie.icu
              * @param c code unit or code point
              * @return true or false
              */
-            public static bool isLeadSurrogate(int c)
+            internal static bool isLeadSurrogate(int c)
             {
                 return (c & 0xfffffc00) == 0xd800;
             }
@@ -30,7 +30,7 @@ namespace CodeHive.unicode_trie.icu
              * @param c code unit or code point
              * @return true or false
              */
-            public static bool isTrailSurrogate(int c)
+            internal static bool isTrailSurrogate(int c)
             {
                 return (c & 0xfffffc00) == 0xdc00;
             }
@@ -40,7 +40,7 @@ namespace CodeHive.unicode_trie.icu
              * @param c code unit or code point
              * @return true or false
              */
-            public static bool isSurrogate(int c)
+            internal static bool isSurrogate(int c)
             {
                 return (c & 0xfffff800) == 0xd800;
             }
@@ -51,7 +51,7 @@ namespace CodeHive.unicode_trie.icu
              * @param c code unit or code point
              * @return true or false
              */
-            public static bool isSurrogateLead(int c)
+            internal static bool isSurrogateLead(int c)
             {
                 return (c & 0x400) == 0;
             }

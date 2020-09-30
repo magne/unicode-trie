@@ -8,7 +8,7 @@ namespace CodeHive.unicode_trie.icu
          * Convert a char to 4 hex uppercase digits.  E.g., hex('a') =>
          * "0041".
          */
-        public static string hex(long ch)
+        internal static string hex(long ch)
         {
             return hex(ch, 4);
         }
@@ -16,7 +16,7 @@ namespace CodeHive.unicode_trie.icu
         /**
          * Supplies a zero-padded hex representation of an integer (without 0x)
          */
-        public static string hex(long i, int places)
+        private static string hex(long i, int places)
         {
             if (i == long.MinValue)
                 return "-8000000000000000";

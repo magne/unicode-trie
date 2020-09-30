@@ -366,8 +366,8 @@ namespace CodeHive.unicode_trie.tests
         private static bool ACCIDENTAL_SURROGATE_PAIR(CharSequence s, int cp)
         {
             return s.length() > 0 &&
-                   Character.isHighSurrogate(s.charAt(s.length() - 1)) &&
-                   Normalizer2Impl.UTF16Plus.isTrailSurrogate(cp);
+                   char.IsHighSurrogate(s.charAt(s.length() - 1)) &&
+                   char.IsLowSurrogate((char) cp);
         }
 
         private static void TestTrieUtf16(string testName, CodePointTrie trie, CheckRange[] checkRanges)
