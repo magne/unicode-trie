@@ -172,5 +172,26 @@ namespace CodeHive.unicode_trie.tests.java
 
             this.count = count + end - off;
         }
+
+        public override string ToString()
+        {
+            var chars = new char[count];
+            if (isLatin1())
+            {
+                for (var i = 0; i < count; ++i)
+                {
+                    chars[i] = (char) value[i];
+                }
+            }
+            else
+            {
+                for (var i = 0; i < count; ++i)
+                {
+                    chars[i] = (char) ((value[i << 1] << 8) | value[(i << 1) + 1]);
+                }
+            }
+
+            return new string(chars);
+        }
     }
 }

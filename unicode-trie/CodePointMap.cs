@@ -1,8 +1,8 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CodeHive.unicode_trie.java;
+using CodeHive.unicode_trie.util;
 
 #pragma warning disable 612
 
@@ -153,27 +153,18 @@ namespace CodeHive.unicode_trie
         {
             private readonly CodePointMap codePointMap;
 
-            /// <remarks>@internal This API is ICU internal only.</remarks>
-            [Obsolete] protected CharSequence s;
+            internal CharSequence s;
 
-            /// <remarks>@internal This API is ICU internal only.</remarks>
-            [Obsolete] protected int sIndex;
+            internal int sIndex;
 
-            /// <remarks>@internal This API is ICU internal only.</remarks>
-            [Obsolete] protected int c;
+            internal int c;
 
-            /// <remarks>@internal This API is ICU internal only.</remarks>
-            [Obsolete] protected int value;
+            internal int value;
 
-            /// <remarks>@internal This API is ICU internal only.</remarks>
-            [Obsolete]
-            protected internal StringIterator(CodePointMap codePointMap, CharSequence s, int sIndex)
+            internal StringIterator(CodePointMap codePointMap, string s, int sIndex)
             {
                 this.codePointMap = codePointMap;
-                this.s = s;
-                this.sIndex = sIndex;
-                c = -1;
-                value = 0;
+                Reset(s, sIndex);
             }
 
             /// <summary>
@@ -182,9 +173,9 @@ namespace CodeHive.unicode_trie
             /// <param name="s">string to iterate over</param>
             /// <param name="sIndex">string index where the iteration will start</param>
             [SuppressMessage("ReSharper", "ParameterHidesMember")]
-            public void Reset(CharSequence s, int sIndex)
+            public void Reset(string s, int sIndex)
             {
-                this.s = s;
+                this.s = new StringCharSequence(s);
                 this.sIndex = sIndex;
                 c = -1;
                 value = 0;
@@ -421,7 +412,7 @@ namespace CodeHive.unicode_trie
         /// <param name="s">string to iterate over</param>
         /// <param name="sIndex">string index where the iteration will start</param>
         /// <returns>the iterator</returns>
-        public virtual StringIterator GetStringIterator(CharSequence s, int sIndex)
+        public virtual StringIterator GetStringIterator(string s, int sIndex)
         {
             return new StringIterator(this, s, sIndex);
         }

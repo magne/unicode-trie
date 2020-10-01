@@ -2,7 +2,7 @@
 
 namespace CodeHive.unicode_trie.java
 {
-    public interface CharSequence
+    internal interface CharSequence
     {
         int length();
         char charAt(in int index);

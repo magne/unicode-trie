@@ -926,7 +926,7 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            public override StringIterator GetStringIterator(CharSequence s, int sIndex)
+            public override StringIterator GetStringIterator(string s, int sIndex)
             {
                 return new FastStringIterator(this, s, sIndex);
             }
@@ -935,7 +935,7 @@ namespace CodeHive.unicode_trie
             {
                 private readonly CodePointTrie trie;
 
-                internal FastStringIterator(Fast fast, CharSequence s, int sIndex)
+                internal FastStringIterator(Fast fast, string s, int sIndex)
                     : base(fast, s, sIndex)
                 {
                     trie = fast;
@@ -1061,7 +1061,7 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            public override StringIterator GetStringIterator(CharSequence s, int sIndex)
+            public override StringIterator GetStringIterator(string s, int sIndex)
             {
                 return new SmallStringIterator(this, s, sIndex);
             }
@@ -1070,7 +1070,7 @@ namespace CodeHive.unicode_trie
             {
                 private readonly CodePointTrie trie;
 
-                internal SmallStringIterator(Small small, CharSequence s, int sIndex)
+                internal SmallStringIterator(Small small, string s, int sIndex)
                     : base(small, s, sIndex)
                 {
                     trie = small;

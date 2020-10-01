@@ -126,7 +126,7 @@ namespace CodeHive.unicode_trie.tests
             {
                 if (expEnd >= 0)
                 {
-                    Fail($"error: {name} getRanges ({variant}) fails to deliver range [U+{start:04X}..U+{expEnd:04X}].0x{expValue:X}\n");
+                    Fail($"error: {name} getRanges ({variant}) fails to deliver range [U+{start:X4}..U+{expEnd:X4}].0x{expValue:X}\n");
                 }
 
                 return false;
@@ -134,14 +134,14 @@ namespace CodeHive.unicode_trie.tests
 
             if (expEnd < 0)
             {
-                Fail($"error: {name} getRanges ({variant}) delivers unexpected range [U+{range.GetStart():04X}..U+{range.GetEnd():04X}].0x{range.GetValue():X}\n");
+                Fail($"error: {name} getRanges ({variant}) delivers unexpected range [U+{range.GetStart():X4}..U+{range.GetEnd():X4}].0x{range.GetValue():X}\n");
                 return false;
             }
 
             if (range.GetStart() != start || range.GetEnd() != expEnd || range.GetValue() != expValue)
             {
-                Fail($"error: {name} getRanges ({variant}) delivers wrong range [U+{range.GetStart():04X}..U+{range.GetEnd():04X}].0x{range.GetValue():X} " +
-                     $"instead of [U+{start:04X}..U+{expEnd:04X}].0x{expValue:X}\n");
+                Fail($"error: {name} getRanges ({variant}) delivers wrong range [U+{range.GetStart():X4}..U+{range.GetEnd():X4}].0x{range.GetValue():X} " +
+                     $"instead of [U+{start:X4}..U+{expEnd:X4}].0x{expValue:X}\n");
                 return false;
             }
 
@@ -174,7 +174,7 @@ namespace CodeHive.unicode_trie.tests
                 // No need to go from each iteration start to the very end.
                 int innerLoopCount;
 
-                var name = $"{typeName}/{option}({testName}) min=U+{start:04X}";
+                var name = $"{typeName}/{option}({testName}) min=U+{start:X4}";
 
                 // Skip over special values and low ranges.
                 for (i = 0; i < checkRanges.Length && checkRanges[i].limit <= start; ++i)
@@ -270,7 +270,7 @@ namespace CodeHive.unicode_trie.tests
                         value2 = trie.AsciiGet(start);
                         if (value != value2)
                         {
-                            Fail($"error: {typeName}({testName}).fromASCII(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
+                            Fail($"error: {typeName}({testName}).fromASCII(U+{start:X4})==0x{value2:X} instead of 0x{value:X}\n");
                             ++countErrors;
                         }
                     }
@@ -282,7 +282,7 @@ namespace CodeHive.unicode_trie.tests
                             value2 = fastTrie.BmpGet(start);
                             if (value != value2)
                             {
-                                Fail($"error: {typeName}({testName}).fromBMP(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
+                                Fail($"error: {typeName}({testName}).fromBMP(U+{start:X4})==0x{value2:X} instead of 0x{value:X}\n");
                                 ++countErrors;
                             }
                         }
@@ -291,7 +291,7 @@ namespace CodeHive.unicode_trie.tests
                             value2 = fastTrie.SuppGet(start);
                             if (value != value2)
                             {
-                                Fail($"error: {typeName}({testName}).fromSupp(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
+                                Fail($"error: {typeName}({testName}).fromSupp(U+{start:X4})==0x{value2:X} instead of 0x{value:X}\n");
                                 ++countErrors;
                             }
                         }
@@ -300,7 +300,7 @@ namespace CodeHive.unicode_trie.tests
                     value2 = trie.Get(start);
                     if (value != value2)
                     {
-                        Fail($"error: {typeName}({testName}).get(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
+                        Fail($"error: {typeName}({testName}).get(U+{start:X4})==0x{value2:X} instead of 0x{value:X}\n");
                         ++countErrors;
                     }
 
@@ -342,7 +342,7 @@ namespace CodeHive.unicode_trie.tests
                     value2 = mutableTrie.Get(start);
                     if (value != value2)
                     {
-                        Fail($"error: {typeName}({testName}).get(U+{start:04X})==0x{value2:X} instead of 0x{value:X}\n");
+                        Fail($"error: {typeName}({testName}).get(U+{start:X4})==0x{value2:X} instead of 0x{value:X}\n");
                         ++countErrors;
                     }
 
@@ -410,7 +410,7 @@ namespace CodeHive.unicode_trie.tests
                 }
             }
 
-            var si = trie.GetStringIterator(s, 0);
+            var si = trie.GetStringIterator(s.ToString(), 0);
 
             /* try forward */
             var sIndex = 0;
@@ -425,12 +425,12 @@ namespace CodeHive.unicode_trie.tests
                 expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {
-                    Fail($"error: wrong value from UCPTRIE_NEXT({testName})(U+{c:04X}): 0x{value:X} instead of 0x{expected:X}\n");
+                    Fail($"error: wrong value from UCPTRIE_NEXT({testName})(U+{c:X4}): 0x{value:X} instead of 0x{expected:X}\n");
                 }
 
                 if (c != c2)
                 {
-                    Fail($"error: wrong code point from UCPTRIE_NEXT({testName}): U+{c:04X} != U+{c2:04X}\n");
+                    Fail($"error: wrong code point from UCPTRIE_NEXT({testName}): U+{c:X4} != U+{c2:X4}\n");
                     continue;
                 }
 
@@ -453,12 +453,12 @@ namespace CodeHive.unicode_trie.tests
                 expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {
-                    Fail($"error: wrong value from UCPTRIE_PREV({testName})(U+{c:04X}): 0x{value:X} instead of 0x{expected:X}\n");
+                    Fail($"error: wrong value from UCPTRIE_PREV({testName})(U+{c:X4}): 0x{value:X} instead of 0x{expected:X}\n");
                 }
 
                 if (c != c2)
                 {
-                    Fail($"error: wrong code point from UCPTRIE_PREV({testName}): U+{c:04X} != U+{c2:04X}\n");
+                    Fail($"error: wrong code point from UCPTRIE_PREV({testName}): U+{c:X4} != U+{c2:X4}\n");
                 }
             }
 
@@ -933,7 +933,7 @@ namespace CodeHive.unicode_trie.tests
                 var vfff = mutableTrie.Get(i + 0xfff);
                 if (v0 != expected || vfff != expected)
                 {
-                    Fail($"error: MutableCodePointTrie U+{i:04X} unexpected value\n");
+                    Fail($"error: MutableCodePointTrie U+{i:X4} unexpected value\n");
                 }
             }
 
