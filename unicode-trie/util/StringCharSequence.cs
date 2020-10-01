@@ -25,8 +25,8 @@ namespace CodeHive.unicode_trie.util
 
         public char charAt(in int index)
         {
-            StringUTF16.checkIndex(index, length());
-            return StringUTF16.charAt(value, index);
+            StringUTF16.CheckIndex(index, length());
+            return StringUTF16.CharAt(value, index);
         }
     }
 }
