@@ -106,18 +106,18 @@ namespace CodeHive.unicode_trie
         /// <p/>The data is copied from the stream;
         /// later modification of the stream will not affect the trie.
         /// </summary>
-        /// <param name="type">selects the trie kind; this method throws an exception
-        ///             if the kind does not match the binary data;
-        ///             use null to accept any kind</param>
-        /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
-        ///                  if the valueWidth does not match the binary data;
-        ///                  use null to accept any data value width</param>
         /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
+        /// <param name="type">selects the trie kind; this method throws an exception
+        ///     if the kind does not match the binary data;
+        ///     use null to accept any kind</param>
+        /// <param name="valueWidth">selects the number of bits in a data value; this method throws an exception
+        ///     if the valueWidth does not match the binary data;
+        ///     use null to accept any data value width</param>
         /// <returns>the trie</returns>
         /// <seealso cref="MutableCodePointTrie"/>
         /// <seealso cref="MutableCodePointTrie.BuildImmutable"/>
         /// <seealso cref="ToBinary"/>
-        public static CodePointTrie FromBinary(Kind? type, ValueWidth? valueWidth, Stream stream)
+        public static CodePointTrie FromBinary(Stream stream, Kind? type, ValueWidth? valueWidth)
         {
             // TODO Don't rely on character encoding, use explicit type when writing char (ushort)
             using var reader = new BinaryEndianReader(stream, Encoding.Unicode, true);
@@ -525,11 +525,12 @@ namespace CodeHive.unicode_trie
         /// * Inverse of <see cref="FromBinary"/>.
         /// </summary>
         /// <param name="os">the output stream</param>
+        /// <param name="order">the byte order of the representation, defaults to <see cref="ByteOrder.BigEndian"/></param>
         /// <returns>the number of bytes written</returns>
-        public int ToBinary(Stream os)
+        public int ToBinary(Stream os, ByteOrder order = null)
         {
             // TODO Don't rely on character encoding, use explicit type when writing char (ushort)
-            using var bw = new BinaryEndianWriter(os, Encoding.Unicode, true);
+            using var bw = new BinaryEndianWriter(os, Encoding.Unicode, true, order ?? ByteOrder.BigEndian);
             // Write the UCPTrieHeader
             bw.Write(0x54726933); // signature="Tri3"
             bw.Write((ushort) // options
@@ -880,7 +881,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Fast FromBinary(ValueWidth valueWidth, Stream stream)
             {
-                return (Fast) CodePointTrie.FromBinary(Kind.Fast, valueWidth, stream);
+                return (Fast) CodePointTrie.FromBinary(stream, Kind.Fast, valueWidth);
             }
 
             /// <returns><see cref="CodePointTrie.Kind.Fast"/></returns>
@@ -1032,7 +1033,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Small FromBinary(ValueWidth valueWidth, Stream stream)
             {
-                return (Small) CodePointTrie.FromBinary(Kind.Small, valueWidth, stream);
+                return (Small) CodePointTrie.FromBinary(stream, Kind.Small, valueWidth);
             }
 
             /// <returns><see cref="CodePointTrie.Kind.Small"/></returns>
@@ -1170,7 +1171,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Fast16 FromBinary(Stream stream)
             {
-                return (Fast16) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits16, stream);
+                return (Fast16) CodePointTrie.FromBinary(stream, Kind.Fast, ValueWidth.Bits16);
             }
 
             /// <inheritdoc />
@@ -1218,7 +1219,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Fast32 FromBinary(Stream stream)
             {
-                return (Fast32) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits32, stream);
+                return (Fast32) CodePointTrie.FromBinary(stream, Kind.Fast, ValueWidth.Bits32);
             }
 
             /// <inheritdoc />
@@ -1266,7 +1267,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Fast8 FromBinary(Stream stream)
             {
-                return (Fast8) CodePointTrie.FromBinary(Kind.Fast, ValueWidth.Bits8, stream);
+                return (Fast8) CodePointTrie.FromBinary(stream, Kind.Fast, ValueWidth.Bits8);
             }
 
             /// <inheritdoc />
@@ -1310,7 +1311,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Small16 FromBinary(Stream stream)
             {
-                return (Small16) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits16, stream);
+                return (Small16) CodePointTrie.FromBinary(stream, Kind.Small, ValueWidth.Bits16);
             }
         }
 
@@ -1334,7 +1335,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Small32 FromBinary(Stream stream)
             {
-                return (Small32) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits32, stream);
+                return (Small32) CodePointTrie.FromBinary(stream, Kind.Small, ValueWidth.Bits32);
             }
         }
 
@@ -1358,7 +1359,7 @@ namespace CodeHive.unicode_trie
             /// <returns>the trie</returns>
             public static Small8 FromBinary(Stream stream)
             {
-                return (Small8) CodePointTrie.FromBinary(Kind.Small, ValueWidth.Bits8, stream);
+                return (Small8) CodePointTrie.FromBinary(stream, Kind.Small, ValueWidth.Bits8);
             }
         }
     }

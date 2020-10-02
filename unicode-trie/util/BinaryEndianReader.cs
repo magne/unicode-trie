@@ -14,19 +14,20 @@ namespace CodeHive.unicode_trie.util
         public BinaryEndianReader(Stream input, ByteOrder order = null) : base(input)
         {
             bigEndian = true;
-            nativeByteOrder = ByteOrder.nativeOrder() == ByteOrder.BigEndian;
+            nativeByteOrder = ByteOrder.BigEndian.IsNative;
         }
 
         public BinaryEndianReader(Stream input, Encoding encoding, ByteOrder order = null) : base(input, encoding)
         {
             bigEndian = true;
-            nativeByteOrder = ByteOrder.nativeOrder() == ByteOrder.BigEndian;
+            nativeByteOrder = ByteOrder.BigEndian.IsNative;
         }
 
         public BinaryEndianReader(Stream input, Encoding encoding, bool leaveOpen, ByteOrder order = null) : base(input, encoding, leaveOpen)
         {
-            bigEndian = true;
-            nativeByteOrder = ByteOrder.nativeOrder() == ByteOrder.BigEndian;
+            order ??= ByteOrder.BigEndian;
+            bigEndian = order == ByteOrder.BigEndian;
+            nativeByteOrder = order.IsNative;
         }
 
         public ByteOrder Order()
@@ -37,7 +38,7 @@ namespace CodeHive.unicode_trie.util
         public BinaryEndianReader Order(ByteOrder bo)
         {
             bigEndian = bo == ByteOrder.BigEndian;
-            nativeByteOrder = bigEndian == (ByteOrder.nativeOrder() == ByteOrder.BigEndian);
+            nativeByteOrder = bigEndian == (ByteOrder.NativeOrder == ByteOrder.BigEndian);
             return this;
         }
 

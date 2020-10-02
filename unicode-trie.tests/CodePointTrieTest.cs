@@ -510,7 +510,7 @@ namespace CodeHive.unicode_trie.tests
                 // Java: There is no code for "swapping" the endianness of data.
                 // withSwap is unused.
 
-                trie = CodePointTrie.FromBinary(kind, valueWidth, storage);
+                trie = CodePointTrie.FromBinary(storage, kind, valueWidth);
                 if (kind != trie.GetKind())
                 {
                     Fail($"error: trie serialization ({testName}) did not preserve trie kind\n");
@@ -532,7 +532,7 @@ namespace CodeHive.unicode_trie.tests
 
                 {
                     storage.Position = 0;
-                    var any = CodePointTrie.FromBinary(null, null, storage);
+                    var any = CodePointTrie.FromBinary(storage, null, null);
                     if (kind != any.GetKind())
                     {
                         Fail("error: ucptrie_openFromBinary(UCPTRIE_TYPE_ANY, UCPTRIE_VALUE_BITS_ANY).GetKind() wrong\n");
