@@ -4,9 +4,58 @@ using CodeHive.unicode_trie.java;
 
 namespace CodeHive.unicode_trie.tests.java
 {
-    public static class StringUTF16_2
+    internal static class StringUtf16
     {
+        private static readonly int HiByteShift;
+        private static readonly int LoByteShift;
+
+        static StringUtf16()
+        {
+            if (ByteOrder.IsBigEndian)
+            {
+                HiByteShift = 8;
+                LoByteShift = 0;
+            }
+            else
+            {
+                HiByteShift = 0;
+                LoByteShift = 8;
+            }
+        }
+
         private const int MaxLength = 1073741823;
+
+        internal static char CharAt(byte[] value, int index)
+        {
+            CheckIndex(index, value);
+            return GetChar(value, index);
+        }
+
+        private static void CheckIndex(int off, byte[] val)
+        {
+            CheckIndex(off, Length(val));
+        }
+
+        private static int Length(byte[] value)
+        {
+            return value.Length >> 1;
+        }
+
+        private static char GetChar(byte[] val, int index)
+        {
+            Debug.Assert(index >= 0 && index < Length(val), "Trusted caller missed bounds check");
+
+            index <<= 1;
+            return (char) ((val[index++] & 255) << HiByteShift | (val[index] & 255) << LoByteShift);
+        }
+
+        internal static void CheckIndex(in int index, in int length)
+        {
+            if (index < 0 || index >= length)
+            {
+                throw new ArgumentException("index " + index + ", length " + length);
+            }
+        }
 
         internal static byte[] NewBytesFor(in int len)
         {
@@ -44,10 +93,10 @@ namespace CodeHive.unicode_trie.tests.java
 
             if (@checked)
             {
-                StringUTF16.CheckIndex(index, value);
+                CheckIndex(index, value);
             }
 
-            var c1 = StringUTF16.GetChar(value, index);
+            var c1 = GetChar(value, index);
             if (char.IsHighSurrogate(c1))
             {
                 ++index;
@@ -55,10 +104,10 @@ namespace CodeHive.unicode_trie.tests.java
                 {
                     if (@checked)
                     {
-                        StringUTF16.CheckIndex(index, value);
+                        CheckIndex(index, value);
                     }
 
-                    var c2 = StringUTF16.GetChar(value, index);
+                    var c2 = GetChar(value, index);
                     if (char.IsLowSurrogate(c2))
                     {
                         return Character.toCodePoint(c1, c2);
@@ -79,19 +128,19 @@ namespace CodeHive.unicode_trie.tests.java
             --index;
             if (@checked)
             {
-                StringUTF16.CheckIndex(index, value);
+                CheckIndex(index, value);
             }
 
-            var c2 = StringUTF16.GetChar(value, index);
+            var c2 = GetChar(value, index);
             if (char.IsLowSurrogate(c2) && index > 0)
             {
                 --index;
                 if (@checked)
                 {
-                    StringUTF16.CheckIndex(index, value);
+                    CheckIndex(index, value);
                 }
 
-                var c1 = StringUTF16.GetChar(value, index);
+                var c1 = GetChar(value, index);
                 if (char.IsHighSurrogate(c1))
                 {
                     return Character.toCodePoint(c1, c2);
@@ -103,7 +152,7 @@ namespace CodeHive.unicode_trie.tests.java
 
         internal static void PutCharSb(byte[] val, int index, int c)
         {
-            StringUTF16.CheckIndex(index, val);
+            CheckIndex(index, val);
             PutChar(val, index, c);
         }
 
@@ -123,16 +172,16 @@ namespace CodeHive.unicode_trie.tests.java
 
         private static void PutChar(byte[] val, int index, int c)
         {
-            // TODO assert index >= 0 && index < length(val) : "Trusted caller missed bounds check";
+            Debug.Assert(index >= 0 && index < Length(val), "Trusted caller missed bounds check");
 
             index <<= 1;
-            val[index++] = (byte) (c >> StringUTF16.HiByteShift);
-            val[index] = (byte) (c >> StringUTF16.LoByteShift);
+            val[index++] = (byte) (c >> HiByteShift);
+            val[index] = (byte) (c >> LoByteShift);
         }
 
         private static void CheckBoundsOffCount(int offset, int count, byte[] val)
         {
-            CheckBoundsOffCount(offset, count, StringUTF16.Length(val));
+            CheckBoundsOffCount(offset, count, Length(val));
         }
 
         private static void CheckBoundsOffCount(int offset, int count, int length)
@@ -145,9 +194,9 @@ namespace CodeHive.unicode_trie.tests.java
 
         private static void CheckBoundsBeginEnd(int begin, int end, byte[] val)
         {
-            if (begin < 0 || begin > end || end > StringUTF16.Length(val))
+            if (begin < 0 || begin > end || end > Length(val))
             {
-                throw new ArgumentException("begin " + begin + ", end " + end + ", length " + StringUTF16.Length(val));
+                throw new ArgumentException("begin " + begin + ", end " + end + ", length " + Length(val));
             }
         }
     }

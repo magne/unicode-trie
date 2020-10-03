@@ -1,21 +1,33 @@
 using System;
+using System.Diagnostics;
 using CodeHive.unicode_trie.java;
 
 namespace CodeHive.unicode_trie.util
 {
     internal class StringCharSequence : CharSequence
     {
+        private static readonly int HiByteShift;
+        private static readonly int LoByteShift;
+
+        static StringCharSequence()
+        {
+            if (ByteOrder.IsBigEndian)
+            {
+                HiByteShift = 8;
+                LoByteShift = 0;
+            }
+            else
+            {
+                HiByteShift = 0;
+                LoByteShift = 8;
+            }
+        }
+
         private readonly byte[] value;
 
         internal StringCharSequence(string str)
         {
-            var chars = str.ToCharArray();
-            value = new byte[chars.Length << 1];
-            for (var i = 0; i < chars.Length; ++i)
-            {
-                value[i << 1] = (byte) (chars[i] >> 8);
-                value[(i << 1) + 1] = (byte) (chars[i] & 0xff);
-            }
+            value = str.ToByteArray();
         }
 
         public int length()
@@ -25,8 +37,24 @@ namespace CodeHive.unicode_trie.util
 
         public char charAt(in int index)
         {
-            StringUTF16.CheckIndex(index, length());
-            return StringUTF16.CharAt(value, index);
+            CheckIndex(index);
+            return GetChar(index);
+        }
+
+        private char GetChar(int index)
+        {
+            Debug.Assert(index >= 0 && index < length(), "Trusted caller missed bounds check");
+
+            index <<= 1;
+            return (char) ((value[index++] & 255) << HiByteShift | (value[index] & 255) << LoByteShift);
+        }
+
+        private void CheckIndex(in int index)
+        {
+            if (index < 0 || index >= length())
+            {
+                throw new ArgumentException($"index {index}, length {length()}");
+            }
         }
     }
 }

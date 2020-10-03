@@ -22,7 +22,7 @@ namespace CodeHive.unicode_trie.tests.java
             }
             else
             {
-                value = StringUTF16_2.NewBytesFor(capacity);
+                value = StringUtf16.NewBytesFor(capacity);
                 coder = 1;
             }
         }
@@ -72,8 +72,8 @@ namespace CodeHive.unicode_trie.tests.java
         {
             if (isLatin1())
             {
-                var buf = StringUTF16_2.NewBytesFor(value.Length);
-                StringUTF16_2.Inflate(value, 0, buf, 0, count);
+                var buf = StringUtf16.NewBytesFor(value.Length);
+                StringUtf16.Inflate(value, 0, buf, 0, count);
                 value = buf;
                 coder = 1;
             }
@@ -81,16 +81,16 @@ namespace CodeHive.unicode_trie.tests.java
 
         public char charAt(in int index)
         {
-            StringUTF16.CheckIndex(index, count);
-            return isLatin1() ? (char) (value[index] & 255) : StringUTF16.CharAt(value, index);
+            StringUtf16.CheckIndex(index, count);
+            return isLatin1() ? (char) (value[index] & 255) : StringUtf16.CharAt(value, index);
         }
 
         internal int codePointAt(int index)
         {
             var count = this.count;
             var value = this.value;
-            StringUTF16.CheckIndex(index, count);
-            return isLatin1() ? value[index] & 255 : StringUTF16_2.CodePointAtSb(value, index, count);
+            StringUtf16.CheckIndex(index, count);
+            return isLatin1() ? value[index] & 255 : StringUtf16.CodePointAtSb(value, index, count);
         }
 
         internal int codePointBefore(int index)
@@ -98,7 +98,7 @@ namespace CodeHive.unicode_trie.tests.java
             var i = index - 1;
             if (i >= 0 && i < count)
             {
-                return isLatin1() ? value[i] & 255 : StringUTF16_2.CodePointBeforeSb(value, index);
+                return isLatin1() ? value[i] & 255 : StringUtf16.CodePointBeforeSb(value, index);
             }
 
             throw new ArgumentException();
@@ -123,7 +123,7 @@ namespace CodeHive.unicode_trie.tests.java
                     inflate();
                 }
 
-                StringUTF16_2.PutCharSb(value, count++, c);
+                StringUtf16.PutCharSb(value, count++, c);
             }
 
             return this;
@@ -157,7 +157,7 @@ namespace CodeHive.unicode_trie.tests.java
                     {
                         this.count = j;
                         inflate();
-                        StringUTF16_2.PutCharsSb(value, j, s, i, end);
+                        StringUtf16.PutCharsSb(value, j, s, i, end);
                         this.count = j + end - i;
                         return;
                     }
@@ -167,7 +167,7 @@ namespace CodeHive.unicode_trie.tests.java
             }
             else
             {
-                StringUTF16_2.PutCharsSb(value, count, s, off, end);
+                StringUtf16.PutCharsSb(value, count, s, off, end);
             }
 
             this.count = count + end - off;
