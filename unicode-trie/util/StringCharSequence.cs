@@ -4,7 +4,7 @@ using CodeHive.unicode_trie.java;
 
 namespace CodeHive.unicode_trie.util
 {
-    internal class StringCharSequence : CharSequence
+    internal class StringCharSequence : ICharSequence
     {
         private static readonly int HiByteShift;
         private static readonly int LoByteShift;
@@ -30,12 +30,9 @@ namespace CodeHive.unicode_trie.util
             value = str.ToByteArray();
         }
 
-        public int length()
-        {
-            return value.Length >> 1;
-        }
+        public int Length => value.Length >> 1;
 
-        public char charAt(in int index)
+        public char CharAt(in int index)
         {
             CheckIndex(index);
             return GetChar(index);
@@ -43,7 +40,7 @@ namespace CodeHive.unicode_trie.util
 
         private char GetChar(int index)
         {
-            Debug.Assert(index >= 0 && index < length(), "Trusted caller missed bounds check");
+            Debug.Assert(index >= 0 && index < Length, "Trusted caller missed bounds check");
 
             index <<= 1;
             return (char) ((value[index++] & 255) << HiByteShift | (value[index] & 255) << LoByteShift);
@@ -51,9 +48,9 @@ namespace CodeHive.unicode_trie.util
 
         private void CheckIndex(in int index)
         {
-            if (index < 0 || index >= length())
+            if (index < 0 || index >= Length)
             {
-                throw new ArgumentException($"index {index}, length {length()}");
+                throw new ArgumentException($"index {index}, length {Length}");
             }
         }
     }

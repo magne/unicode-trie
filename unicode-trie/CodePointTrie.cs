@@ -73,23 +73,27 @@ namespace CodeHive.unicode_trie
             Bits8
         }
 
+        private const int MaxUnicode = 0x10ffff;
+
+        private const int AsciiLimit = 0x80;
+
         private CodePointTrie(char[] index, Data data, int highStart,
                               int index3NullOffset, int dataNullOffset)
         {
-            this.ascii = new int[ASCII_LIMIT];
+            this.ascii = new int[AsciiLimit];
             this.index = index;
             this.data = data;
-            this.dataLength = data.GetDataLength();
+            this.dataLength = data.DataLength;
             this.highStart = highStart;
             this.index3NullOffset = index3NullOffset;
             this.dataNullOffset = dataNullOffset;
 
-            for (int c = 0; c < ASCII_LIMIT; ++c)
+            for (var c = 0; c < AsciiLimit; ++c)
             {
                 ascii[c] = data.GetFromIndex(c);
             }
 
-            int nullValueOffset = dataNullOffset;
+            var nullValueOffset = dataNullOffset;
             if (nullValueOffset >= dataLength)
             {
                 nullValueOffset = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
@@ -212,18 +216,17 @@ namespace CodeHive.unicode_trie
             dataLength |= ((options & OPTIONS_DATA_LENGTH_MASK) << 4);
             dataNullOffset |= ((options & OPTIONS_DATA_NULL_OFFSET_MASK) << 8);
 
-            int highStart = shiftedHighStart << SHIFT_2;
+            var highStart = shiftedHighStart << SHIFT_2;
 
             // Calculate the actual length, minus the header.
-            var actualLength = indexLength * 2;
-            actualLength += valueWidth switch
-            {
-                ValueWidth.Bits16 => dataLength * 2,
-                ValueWidth.Bits32 => dataLength * 4,
-                _                 => dataLength
-            };
+            // var actualLength = indexLength * 2;
+            // actualLength += valueWidth switch
+            // {
+            //     ValueWidth.Bits16 => dataLength * 2,
+            //     ValueWidth.Bits32 => dataLength * 4,
+            //     _                 => dataLength
+            // };
 
-            // TODO
             // if (bytes.remaining() < actualLength)
             // {
             //     throw new ICUUncheckedIOException("Buffer too short for the CodePointTrie data");
@@ -270,7 +273,7 @@ namespace CodeHive.unicode_trie
         /// <returns>the number of bits in a trie data value</returns>
         public ValueWidth GetValueWidth()
         {
-            return data.GetValueWidth();
+            return data.ValueWidth;
         }
 
         /// <inheritdoc />
@@ -289,12 +292,7 @@ namespace CodeHive.unicode_trie
             return ascii[c];
         }
 
-        private static readonly int MAX_UNICODE = 0x10ffff;
-
-        private static readonly int ASCII_LIMIT = 0x80;
-
-        private static int MaybeFilterValue(int value, int trieNullValue, int nullValue,
-                                            IValueFilter filter)
+        private static int MaybeFilterValue(int value, int trieNullValue, int nullValue, IValueFilter filter)
         {
             if (value == trieNullValue)
             {
@@ -311,39 +309,39 @@ namespace CodeHive.unicode_trie
         /// <inheritdoc />
         public override bool GetRange(int start, IValueFilter filter, Range range)
         {
-            if (start < 0 || MAX_UNICODE < start)
+            if (start < 0 || MaxUnicode < start)
             {
                 return false;
             }
 
             if (start >= highStart)
             {
-                int _di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
-                int _value = data.GetFromIndex(_di);
+                var _di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
+                var _value = data.GetFromIndex(_di);
                 if (filter != null)
                 {
                     _value = filter.Apply(_value);
                 }
 
-                range.Set(start, MAX_UNICODE, _value);
+                range.Set(start, MaxUnicode, _value);
                 return true;
             }
 
             // ReSharper disable once LocalVariableHidesMember
-            int nullValue = this.nullValue;
+            var nullValue = this.nullValue;
             if (filter != null)
             {
                 nullValue = filter.Apply(nullValue);
             }
 
-            Kind kind = GetKind();
+            var kind = GetKind();
 
-            int prevI3Block = -1;
-            int prevBlock = -1;
-            int c = start;
+            var prevI3Block = -1;
+            var prevBlock = -1;
+            var c = start;
             // Initialize to make compiler happy. Real value when haveValue is true.
             int trieValue = 0, value = 0;
-            bool haveValue = false;
+            var haveValue = false;
             do
             {
                 int i3Block;
@@ -360,7 +358,7 @@ namespace CodeHive.unicode_trie
                 else
                 {
                     // Use the multi-stage index.
-                    int i1 = c >> SHIFT_1;
+                    var i1 = c >> SHIFT_1;
                     if (kind == Kind.Fast)
                     {
                         Debug.Assert(0xFFFF < c && c < highStart);
@@ -421,8 +419,8 @@ namespace CodeHive.unicode_trie
                     else
                     {
                         // 18-bit indexes stored in groups of 9 entries per 8 indexes.
-                        int group = (i3Block & 0x7fff) + (i3 & ~7) + (i3 >> 3);
-                        int gi = i3 & 7;
+                        var group = (i3Block & 0x7fff) + (i3 & ~7) + (i3 >> 3);
+                        var gi = i3 & 7;
                         block = (index[group++] << (2 + (2 * gi))) & 0x30000;
                         block |= index[group + gi];
                     }
@@ -435,7 +433,7 @@ namespace CodeHive.unicode_trie
                     }
                     else
                     {
-                        int dataMask = dataBlockLength - 1;
+                        var dataMask = dataBlockLength - 1;
                         prevBlock = block;
                         if (block == dataNullOffset)
                         {
@@ -459,8 +457,8 @@ namespace CodeHive.unicode_trie
                         }
                         else
                         {
-                            int _di = block + (c & dataMask);
-                            int trieValue2 = data.GetFromIndex(_di);
+                            var _di = block + (c & dataMask);
+                            var trieValue2 = data.GetFromIndex(_di);
                             if (haveValue)
                             {
                                 if (trieValue2 != trieValue)
@@ -505,15 +503,15 @@ namespace CodeHive.unicode_trie
             } while (c < highStart);
 
             Debug.Assert(haveValue);
-            int di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
-            int highValue = data.GetFromIndex(di);
+            var di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
+            var highValue = data.GetFromIndex(di);
             if (MaybeFilterValue(highValue, this.nullValue, nullValue, filter) != value)
             {
                 --c;
             }
             else
             {
-                c = MAX_UNICODE;
+                c = MaxUnicode;
             }
 
             range.Set(start, c, value);
@@ -559,89 +557,89 @@ namespace CodeHive.unicode_trie
         internal const int FAST_SHIFT = 6;
 
         /** Number of entries in a data block for code points below the fast limit. 64=0x40 @internal */
-        internal static readonly int FAST_DATA_BLOCK_LENGTH = 1 << FAST_SHIFT;
+        internal const int FAST_DATA_BLOCK_LENGTH = 1 << FAST_SHIFT;
 
         /** Mask for getting the lower bits for the in-fast-data-block offset. @internal */
-        private static readonly int FAST_DATA_MASK = FAST_DATA_BLOCK_LENGTH - 1;
+        private const int FAST_DATA_MASK = FAST_DATA_BLOCK_LENGTH - 1;
 
         /** @internal */
-        private static readonly int SMALL_MAX = 0xfff;
+        private const int SMALL_MAX = 0xfff;
 
         /**
          * Offset from dataLength (to be subtracted) for fetching the
          * value returned for out-of-range code points and ill-formed UTF-8/16.
          * @internal
          */
-        private static readonly int ERROR_VALUE_NEG_DATA_OFFSET = 1;
+        private const int ERROR_VALUE_NEG_DATA_OFFSET = 1;
 
         /**
          * Offset from dataLength (to be subtracted) for fetching the
          * value returned for code points highStart..U+10FFFF.
          * @internal
          */
-        private static readonly int HIGH_VALUE_NEG_DATA_OFFSET = 2;
+        private const int HIGH_VALUE_NEG_DATA_OFFSET = 2;
 
         // ucptrie_impl.h
 
         /** The length of the BMP index table. 1024=0x400 */
-        private static readonly int BMP_INDEX_LENGTH = 0x10000 >> FAST_SHIFT;
+        private const int BMP_INDEX_LENGTH = 0x10000 >> FAST_SHIFT;
 
-        internal static readonly int SMALL_LIMIT        = 0x1000;
-        private static readonly  int SMALL_INDEX_LENGTH = SMALL_LIMIT >> FAST_SHIFT;
+        internal const int SMALL_LIMIT        = 0x1000;
+        private const  int SMALL_INDEX_LENGTH = SMALL_LIMIT >> FAST_SHIFT;
 
         /** Shift size for getting the index-3 table offset. */
-        internal static readonly int SHIFT_3 = 4;
+        internal const int SHIFT_3 = 4;
 
         /** Shift size for getting the index-2 table offset. */
-        private static readonly int SHIFT_2 = 5 + SHIFT_3;
+        private const int SHIFT_2 = 5 + SHIFT_3;
 
         /** Shift size for getting the index-1 table offset. */
-        private static readonly int SHIFT_1 = 5 + SHIFT_2;
+        private const int SHIFT_1 = 5 + SHIFT_2;
 
         /**
          * Difference between two shift sizes,
          * for getting an index-2 offset from an index-3 offset. 5=9-4
          */
-        internal static readonly int SHIFT_2_3 = SHIFT_2 - SHIFT_3;
+        internal const int SHIFT_2_3 = SHIFT_2 - SHIFT_3;
 
         /**
          * Difference between two shift sizes,
          * for getting an index-1 offset from an index-2 offset. 5=14-9
          */
-        internal static readonly int SHIFT_1_2 = SHIFT_1 - SHIFT_2;
+        internal const int SHIFT_1_2 = SHIFT_1 - SHIFT_2;
 
         /**
          * Number of index-1 entries for the BMP. (4)
          * This part of the index-1 table is omitted from the serialized form.
          */
-        private static readonly int OMITTED_BMP_INDEX_1_LENGTH = 0x10000 >> SHIFT_1;
+        private const int OMITTED_BMP_INDEX_1_LENGTH = 0x10000 >> SHIFT_1;
 
         /** Number of entries in an index-2 block. 32=0x20 */
-        internal static readonly int INDEX_2_BLOCK_LENGTH = 1 << SHIFT_1_2;
+        internal const int INDEX_2_BLOCK_LENGTH = 1 << SHIFT_1_2;
 
         /** Mask for getting the lower bits for the in-index-2-block offset. */
-        internal static readonly int INDEX_2_MASK = INDEX_2_BLOCK_LENGTH - 1;
+        internal const int INDEX_2_MASK = INDEX_2_BLOCK_LENGTH - 1;
 
         /** Number of code points per index-2 table entry. 512=0x200 */
-        internal static readonly int CP_PRE_INDEX_2_ENTRY = 1 << SHIFT_2;
+        internal const int CP_PRE_INDEX_2_ENTRY = 1 << SHIFT_2;
 
         /** Number of entries in an index-3 block. 32=0x20 */
-        internal static readonly int INDEX_3_BLOCK_LENGTH = 1 << SHIFT_2_3;
+        internal const int INDEX_3_BLOCK_LENGTH = 1 << SHIFT_2_3;
 
         /** Mask for getting the lower bits for the in-index-3-block offset. */
-        private static readonly int INDEX_3_MASK = INDEX_3_BLOCK_LENGTH - 1;
+        private const int INDEX_3_MASK = INDEX_3_BLOCK_LENGTH - 1;
 
         /** Number of entries in a small data block. 16=0x10 */
-        internal static readonly int SMALL_DATA_BLOCK_LENGTH = 1 << SHIFT_3;
+        internal const int SMALL_DATA_BLOCK_LENGTH = 1 << SHIFT_3;
 
         /** Mask for getting the lower bits for the in-small-data-block offset. */
-        internal static readonly int SMALL_DATA_MASK = SMALL_DATA_BLOCK_LENGTH - 1;
+        internal const int SMALL_DATA_MASK = SMALL_DATA_BLOCK_LENGTH - 1;
 
         // ucptrie_impl.h: Constants for use with UCPTrieHeader.options.
-        private static readonly int OPTIONS_DATA_LENGTH_MASK      = 0xf000;
-        private static readonly int OPTIONS_DATA_NULL_OFFSET_MASK = 0xf00;
-        private static readonly int OPTIONS_RESERVED_MASK         = 0x38;
-        private static readonly int OPTIONS_VALUE_BITS_MASK       = 7;
+        private const int OPTIONS_DATA_LENGTH_MASK      = 0xf000;
+        private const int OPTIONS_DATA_NULL_OFFSET_MASK = 0xf00;
+        private const int OPTIONS_RESERVED_MASK         = 0x38;
+        private const int OPTIONS_VALUE_BITS_MASK       = 7;
 
         /**
          * Value for index3NullOffset which indicates that there is no index-3 null block.
@@ -652,32 +650,26 @@ namespace CodeHive.unicode_trie
 
         internal const int NO_DATA_NULL_OFFSET = 0xFFFFf;
 
-        public abstract class Data
+        internal abstract class Data
         {
-            internal abstract ValueWidth GetValueWidth();
-            internal abstract int GetDataLength();
+            internal abstract ValueWidth ValueWidth { get; }
+            internal abstract int DataLength { get; }
             internal abstract int GetFromIndex(int index);
             internal abstract int Write(BinaryWriter writer);
         }
 
         private class Data16 : Data
         {
-            char[] array;
+            private readonly char[] array;
 
             internal Data16(char[] a)
             {
                 array = a;
             }
 
-            internal override ValueWidth GetValueWidth()
-            {
-                return ValueWidth.Bits16;
-            }
+            internal override ValueWidth ValueWidth => ValueWidth.Bits16;
 
-            internal override int GetDataLength()
-            {
-                return array.Length;
-            }
+            internal override int DataLength => array.Length;
 
             internal override int GetFromIndex(int index)
             {
@@ -686,9 +678,9 @@ namespace CodeHive.unicode_trie
 
             internal override int Write(BinaryWriter writer)
             {
-                foreach (char v in array)
+                foreach (var v in array)
                 {
-                    writer.Write(v);
+                    writer.Write((ushort) v);
                 }
 
                 return array.Length * 2;
@@ -697,22 +689,16 @@ namespace CodeHive.unicode_trie
 
         private class Data32 : Data
         {
-            int[] array;
+            private readonly int[] array;
 
             public Data32(int[] a)
             {
                 array = a;
             }
 
-            internal override ValueWidth GetValueWidth()
-            {
-                return ValueWidth.Bits32;
-            }
+            internal override ValueWidth ValueWidth => ValueWidth.Bits32;
 
-            internal override int GetDataLength()
-            {
-                return array.Length;
-            }
+            internal override int DataLength => array.Length;
 
             internal override int GetFromIndex(int index)
             {
@@ -732,22 +718,16 @@ namespace CodeHive.unicode_trie
 
         private class Data8 : Data
         {
-            byte[] array;
+            private readonly byte[] array;
 
             internal Data8(byte[] a)
             {
                 array = a;
             }
 
-            internal override ValueWidth GetValueWidth()
-            {
-                return ValueWidth.Bits8;
-            }
+            internal override ValueWidth ValueWidth => ValueWidth.Bits8;
 
-            internal override int GetDataLength()
-            {
-                return array.Length;
-            }
+            internal override int DataLength => array.Length;
 
             internal override int GetFromIndex(int index)
             {
@@ -765,51 +745,39 @@ namespace CodeHive.unicode_trie
             }
         }
 
-        /** @internal */
         private readonly int[] ascii;
 
-        /** @internal */
         private readonly char[] index;
 
-        /// <remarks>@internal This API is ICU internal only.</remarks>
-        [Obsolete] protected readonly Data data;
+        private readonly Data data;
 
-        /// <remarks>@internal This API is ICU internal only.</remarks>
-        [Obsolete] protected readonly int dataLength;
+        private readonly int dataLength;
 
         /**
          * Start of the last range which ends at U+10FFFF.
          */
-        /// <remarks>@internal This API is ICU internal only.</remarks>
-        [Obsolete] protected readonly int highStart;
+        private readonly int highStart;
 
         /**
          * Internal index-3 null block offset.
          * Set to an impossibly high value (e.g., 0xFFFF) if there is no dedicated index-3 null block.
-         * @internal
          */
         private readonly int index3NullOffset;
 
         /**
          * Internal data null block offset, not shifted.
          * Set to an impossibly high value (e.g., 0xFFFFf) if there is no dedicated data null block.
-         * @internal
          */
         private readonly int dataNullOffset;
 
-        /** @internal */
         private readonly int nullValue;
 
-        /// <remarks>@internal This API is ICU internal only.</remarks>
-        [Obsolete]
-        protected int FastIndex(int c)
+        private int FastIndex(int c)
         {
             return index[c >> FAST_SHIFT] + (c & FAST_DATA_MASK);
         }
 
-        /// <remarks>@internal This API is ICU internal only.</remarks>
-        [Obsolete]
-        protected int SmallIndex(Kind kind, int c)
+        private int SmallIndex(Kind kind, int c)
         {
             // Split into two methods to make this part inline-friendly.
             // In C, this part is a macro.
@@ -823,7 +791,7 @@ namespace CodeHive.unicode_trie
 
         private int InternalSmallIndex(Kind kind, int c)
         {
-            int i1 = c >> SHIFT_1;
+            var i1 = c >> SHIFT_1;
             if (kind == Kind.Fast)
             {
                 Debug.Assert(0xFFFF < c && c < highStart);
@@ -836,7 +804,7 @@ namespace CodeHive.unicode_trie
             }
 
             int i3Block = index[index[i1] + ((c >> SHIFT_2) & INDEX_2_MASK)];
-            int i3 = (c >> SHIFT_3) & INDEX_3_MASK;
+            var i3 = (c >> SHIFT_3) & INDEX_3_MASK;
 
             int dataBlock;
             if ((i3Block & 0x8000) == 0)
@@ -856,17 +824,14 @@ namespace CodeHive.unicode_trie
             return dataBlock + (c & SMALL_DATA_MASK);
         }
 
-        /// <remarks>@internal This API is ICU internal only.</remarks>
-        [Obsolete]
-        protected abstract int cpIndex(int c);
+        internal abstract int cpIndex(int c);
 
         /// <summary>
         /// A CodePointTrie with <see cref="CodePointTrie.Kind.Fast"/>
         /// </summary>
         public abstract class Fast : CodePointTrie
         {
-            internal Fast(char[] index, Data data, int highStart,
-                          int index3NullOffset, int dataNullOffset)
+            internal Fast(char[] index, Data data, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, data, highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -907,9 +872,7 @@ namespace CodeHive.unicode_trie
             /// <returns>The supplementary code point's trie value.</returns>
             public abstract int SuppGet(int c);
 
-            /// <remarks>@internal This API is ICU internal only.</remarks>
-            [Obsolete]
-            protected override int cpIndex(int c)
+            internal override int cpIndex(int c)
             {
                 if (c >= 0)
                 {
@@ -927,44 +890,44 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            public override StringIterator GetStringIterator(string s, int sIndex)
+            public override StringIterator GetStringIterator(string str, int index)
             {
-                return new FastStringIterator(this, s, sIndex);
+                return new FastStringIterator(this, str, index);
             }
 
             private class FastStringIterator : StringIterator
             {
                 private readonly CodePointTrie trie;
 
-                internal FastStringIterator(Fast fast, string s, int sIndex)
-                    : base(fast, s, sIndex)
+                internal FastStringIterator(Fast fast, string str, int index)
+                    : base(fast, str, index)
                 {
                     trie = fast;
                 }
 
                 public override bool Next()
                 {
-                    if (sIndex >= s.length())
+                    if (Index >= Length)
                     {
                         return false;
                     }
 
-                    char lead = s.charAt(sIndex++);
-                    c = lead;
+                    var lead = CharAt(Index++);
+                    CodePoint = lead;
                     int dataIndex;
                     if (!char.IsSurrogate(lead))
                     {
-                        dataIndex = trie.FastIndex(c);
+                        dataIndex = trie.FastIndex(CodePoint);
                     }
                     else
                     {
                         char trail;
-                        if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && sIndex < s.length() &&
-                            char.IsLowSurrogate(trail = s.charAt(sIndex)))
+                        if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && Index < Length &&
+                            char.IsLowSurrogate(trail = CharAt(Index)))
                         {
-                            ++sIndex;
-                            c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.SmallIndex(Kind.Fast, c);
+                            ++Index;
+                            CodePoint = Character.toCodePoint(lead, trail);
+                            dataIndex = trie.SmallIndex(Kind.Fast, CodePoint);
                         }
                         else
                         {
@@ -972,33 +935,33 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.GetFromIndex(dataIndex);
+                    Value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
 
                 public override bool Previous()
                 {
-                    if (sIndex <= 0)
+                    if (Index <= 0)
                     {
                         return false;
                     }
 
-                    char trail = s.charAt(--sIndex);
-                    c = trail;
+                    var trail = CharAt(--Index);
+                    CodePoint = trail;
                     int dataIndex;
                     if (!char.IsSurrogate(trail))
                     {
-                        dataIndex = trie.FastIndex(c);
+                        dataIndex = trie.FastIndex(CodePoint);
                     }
                     else
                     {
                         char lead;
-                        if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && sIndex > 0 &&
-                            char.IsHighSurrogate(lead = s.charAt(sIndex - 1)))
+                        if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && Index > 0 &&
+                            char.IsHighSurrogate(lead = CharAt(Index - 1)))
                         {
-                            --sIndex;
-                            c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.SmallIndex(Kind.Fast, c);
+                            --Index;
+                            CodePoint = Character.toCodePoint(lead, trail);
+                            dataIndex = trie.SmallIndex(Kind.Fast, CodePoint);
                         }
                         else
                         {
@@ -1006,7 +969,7 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.GetFromIndex(dataIndex);
+                    Value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
             }
@@ -1017,8 +980,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public abstract class Small : CodePointTrie
         {
-            internal Small(char[] index, Data data, int highStart,
-                           int index3NullOffset, int dataNullOffset)
+            internal Small(char[] index, Data data, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, data, highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -1042,9 +1004,7 @@ namespace CodeHive.unicode_trie
                 return Kind.Small;
             }
 
-            /// <remarks>@internal This API is ICU internal only.</remarks>
-            [Obsolete]
-            protected override int cpIndex(int c)
+            internal override int cpIndex(int c)
             {
                 if (c >= 0)
                 {
@@ -1052,7 +1012,8 @@ namespace CodeHive.unicode_trie
                     {
                         return FastIndex(c);
                     }
-                    else if (c <= 0x10ffff)
+
+                    if (c <= 0x10ffff)
                     {
                         return SmallIndex(Kind.Small, c);
                     }
@@ -1062,44 +1023,44 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            public override StringIterator GetStringIterator(string s, int sIndex)
+            public override StringIterator GetStringIterator(string str, int index)
             {
-                return new SmallStringIterator(this, s, sIndex);
+                return new SmallStringIterator(this, str, index);
             }
 
             private class SmallStringIterator : StringIterator
             {
                 private readonly CodePointTrie trie;
 
-                internal SmallStringIterator(Small small, string s, int sIndex)
-                    : base(small, s, sIndex)
+                internal SmallStringIterator(Small small, string str, int index)
+                    : base(small, str, index)
                 {
                     trie = small;
                 }
 
                 public override bool Next()
                 {
-                    if (sIndex >= s.length())
+                    if (Index >= Length)
                     {
                         return false;
                     }
 
-                    char lead = s.charAt(sIndex++);
-                    c = lead;
+                    var lead = CharAt(Index++);
+                    CodePoint = lead;
                     int dataIndex;
                     if (!char.IsSurrogate(lead))
                     {
-                        dataIndex = trie.cpIndex(c);
+                        dataIndex = trie.cpIndex(CodePoint);
                     }
                     else
                     {
                         char trail;
-                        if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && sIndex < s.length() &&
-                            char.IsLowSurrogate(trail = s.charAt(sIndex)))
+                        if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && Index < Length &&
+                            char.IsLowSurrogate(trail = CharAt(Index)))
                         {
-                            ++sIndex;
-                            c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.SmallIndex(Kind.Small, c);
+                            ++Index;
+                            CodePoint = Character.toCodePoint(lead, trail);
+                            dataIndex = trie.SmallIndex(Kind.Small, CodePoint);
                         }
                         else
                         {
@@ -1107,33 +1068,33 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.GetFromIndex(dataIndex);
+                    Value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
 
                 public override bool Previous()
                 {
-                    if (sIndex <= 0)
+                    if (Index <= 0)
                     {
                         return false;
                     }
 
-                    char trail = s.charAt(--sIndex);
-                    c = trail;
+                    var trail = CharAt(--Index);
+                    CodePoint = trail;
                     int dataIndex;
                     if (!char.IsSurrogate(trail))
                     {
-                        dataIndex = trie.cpIndex(c);
+                        dataIndex = trie.cpIndex(CodePoint);
                     }
                     else
                     {
                         char lead;
-                        if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && sIndex > 0 &&
-                            char.IsHighSurrogate(lead = s.charAt(sIndex - 1)))
+                        if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && Index > 0 &&
+                            char.IsHighSurrogate(lead = CharAt(Index - 1)))
                         {
-                            --sIndex;
-                            c = Character.toCodePoint(lead, trail);
-                            dataIndex = trie.SmallIndex(Kind.Small, c);
+                            --Index;
+                            CodePoint = Character.toCodePoint(lead, trail);
+                            dataIndex = trie.SmallIndex(Kind.Small, CodePoint);
                         }
                         else
                         {
@@ -1141,7 +1102,7 @@ namespace CodeHive.unicode_trie
                         }
                     }
 
-                    value = trie.data.GetFromIndex(dataIndex);
+                    Value = trie.data.GetFromIndex(dataIndex);
                     return true;
                 }
             }
@@ -1153,13 +1114,12 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Fast16 : Fast
         {
-            private char[] dataArray;
+            private readonly char[] dataArray;
 
-            internal Fast16(char[] index, char[] data16, int highStart,
-                            int index3NullOffset, int dataNullOffset)
+            internal Fast16(char[] index, char[] data16, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data16(data16), highStart, index3NullOffset, dataNullOffset)
             {
-                this.dataArray = data16;
+                dataArray = data16;
             }
 
             /// <summary>
@@ -1207,7 +1167,7 @@ namespace CodeHive.unicode_trie
                             int index3NullOffset, int dataNullOffset)
                 : base(index, new Data32(data32), highStart, index3NullOffset, dataNullOffset)
             {
-                this.dataArray = data32;
+                dataArray = data32;
             }
 
             /// <summary>
@@ -1251,11 +1211,10 @@ namespace CodeHive.unicode_trie
         {
             private readonly byte[] dataArray;
 
-            internal Fast8(char[] index, byte[] data8, int highStart,
-                           int index3NullOffset, int dataNullOffset)
+            internal Fast8(char[] index, byte[] data8, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data8(data8), highStart, index3NullOffset, dataNullOffset)
             {
-                this.dataArray = data8;
+                dataArray = data8;
             }
 
             /// <summary>
@@ -1297,8 +1256,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Small16 : Small
         {
-            internal Small16(char[] index, char[] data16, int highStart,
-                             int index3NullOffset, int dataNullOffset)
+            internal Small16(char[] index, char[] data16, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data16(data16), highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -1321,8 +1279,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Small32 : Small
         {
-            internal Small32(char[] index, int[] data32, int highStart,
-                             int index3NullOffset, int dataNullOffset)
+            internal Small32(char[] index, int[] data32, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data32(data32), highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -1345,8 +1302,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Small8 : Small
         {
-            internal Small8(char[] index, byte[] data8, int highStart,
-                            int index3NullOffset, int dataNullOffset)
+            internal Small8(char[] index, byte[] data8, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data8(data8), highStart, index3NullOffset, dataNullOffset)
             { }
 

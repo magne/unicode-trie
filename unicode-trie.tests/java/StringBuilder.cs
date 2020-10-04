@@ -5,7 +5,7 @@ using CodeHive.unicode_trie.java;
 
 namespace CodeHive.unicode_trie.tests.java
 {
-    internal class StringBuilder : CharSequence
+    internal class StringBuilder : ICharSequence
     {
         private const bool COMPACT_STRINGS = true;
 
@@ -27,10 +27,7 @@ namespace CodeHive.unicode_trie.tests.java
             }
         }
 
-        public int length()
-        {
-            return count;
-        }
+        public int Length => count;
 
         private void ensureCapacityInternal(int minimumCapacity)
         {
@@ -79,7 +76,7 @@ namespace CodeHive.unicode_trie.tests.java
             }
         }
 
-        public char charAt(in int index)
+        public char CharAt(in int index)
         {
             StringUtf16.CheckIndex(index, count);
             return isLatin1() ? (char) (value[index] & 255) : StringUtf16.CharAt(value, index);

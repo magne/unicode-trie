@@ -134,13 +134,13 @@ namespace CodeHive.unicode_trie.tests
 
             if (expEnd < 0)
             {
-                Fail($"error: {name} getRanges ({variant}) delivers unexpected range [U+{range.GetStart():X4}..U+{range.GetEnd():X4}].0x{range.GetValue():X}\n");
+                Fail($"error: {name} getRanges ({variant}) delivers unexpected range [U+{range.Start:X4}..U+{range.End:X4}].0x{range.Value:X}\n");
                 return false;
             }
 
-            if (range.GetStart() != start || range.GetEnd() != expEnd || range.GetValue() != expValue)
+            if (range.Start != start || range.End != expEnd || range.Value != expValue)
             {
-                Fail($"error: {name} getRanges ({variant}) delivers wrong range [U+{range.GetStart():X4}..U+{range.GetEnd():X4}].0x{range.GetValue():X} " +
+                Fail($"error: {name} getRanges ({variant}) delivers wrong range [U+{range.Start:X4}..U+{range.End:X4}].0x{range.Value:X} " +
                      $"instead of [U+{start:X4}..U+{expEnd:X4}].0x{expValue:X}\n");
                 return false;
             }
@@ -182,7 +182,7 @@ namespace CodeHive.unicode_trie.tests
 
                 var i0 = i;
                 // without value handler
-                for (innerLoopCount = 0;; ++i, start = range.GetEnd() + 1)
+                for (innerLoopCount = 0;; ++i, start = range.End + 1)
                 {
                     if (i < checkRanges.Length)
                     {
@@ -210,7 +210,7 @@ namespace CodeHive.unicode_trie.tests
 
                 // with value handler
                 for (i = i0, start = IterStarts[s], innerLoopCount = 0;;
-                    ++i, start = range.GetEnd() + 1)
+                    ++i, start = range.End + 1)
                 {
                     if (i < checkRanges.Length)
                     {
@@ -363,10 +363,10 @@ namespace CodeHive.unicode_trie.tests
             }
         }
 
-        private static bool ACCIDENTAL_SURROGATE_PAIR(CharSequence s, int cp)
+        private static bool ACCIDENTAL_SURROGATE_PAIR(ICharSequence s, int cp)
         {
-            return s.length() > 0 &&
-                   char.IsHighSurrogate(s.charAt(s.length() - 1)) &&
+            return s.Length > 0 &&
+                   char.IsHighSurrogate(s.CharAt(s.Length - 1)) &&
                    char.IsLowSurrogate((char) cp);
         }
 
@@ -415,13 +415,13 @@ namespace CodeHive.unicode_trie.tests
             /* try forward */
             var sIndex = 0;
             i = 0;
-            while (sIndex < s.length())
+            while (sIndex < s.Length)
             {
                 c2 = s.codePointAt(sIndex);
                 sIndex += Character.charCount(c2);
-                Assert.True(si.Next(), "next() at " + si.GetIndex());
-                c = si.GetCodePoint();
-                value = si.GetValue();
+                Assert.True(si.Next(), "next() at " + si.Index);
+                c = si.CodePoint;
+                value = si.Value;
                 expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {
@@ -440,16 +440,16 @@ namespace CodeHive.unicode_trie.tests
             Assert.False(si.Next(), "next() at the end");
 
             /* try backward */
-            sIndex = s.length();
+            sIndex = s.Length;
             i = countValues;
             while (sIndex > 0)
             {
                 --i;
                 c2 = s.codePointBefore(sIndex);
                 sIndex -= Character.charCount(c2);
-                Assert.True(si.Previous(), "previous() at " + si.GetIndex());
-                c = si.GetCodePoint();
-                value = si.GetValue();
+                Assert.True(si.Previous(), "previous() at " + si.Index);
+                c = si.CodePoint;
+                value = si.Value;
                 expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {

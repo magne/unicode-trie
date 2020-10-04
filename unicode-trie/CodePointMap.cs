@@ -96,27 +96,23 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Range
         {
-            internal int start;
-            internal int end;
-            internal int value;
-
             /// <summary>
             /// Constructor. Sets start and end to -1 and value to 0.
             /// </summary>
             public Range()
             {
-                start = end = -1;
-                value = 0;
+                Start = End = -1;
+                Value = 0;
             }
 
             /// <returns>the start code point</returns>
-            public int GetStart() => start;
+            public int Start { get; internal set; }
 
             /// <returns>the (inclusive) end code point</returns>
-            public int GetEnd() => end;
+            public int End { get; internal set; }
 
             /// <returns>the range value</returns>
-            public int GetValue() => value;
+            public int Value { get; internal set; }
 
             /// <summary>
             /// Sets the range. When using <see cref="CodePointMap.GetEnumerator()"/>,
@@ -125,12 +121,11 @@ namespace CodeHive.unicode_trie
             /// <param name="start">new start code point</param>
             /// <param name="end">new end code point</param>
             /// <param name="value">new value</param>
-            [SuppressMessage("ReSharper", "ParameterHidesMember")]
-            public void Set(int start, int end, int value)
+            internal void Set(int start, int end, int value)
             {
-                this.start = start;
-                this.end = end;
-                this.value = value;
+                Start = start;
+                End = end;
+                Value = value;
             }
         }
 
@@ -153,32 +148,25 @@ namespace CodeHive.unicode_trie
         {
             private readonly CodePointMap codePointMap;
 
-            internal CharSequence s;
+            private ICharSequence sequence;
 
-            internal int sIndex;
-
-            internal int c;
-
-            internal int value;
-
-            internal StringIterator(CodePointMap codePointMap, string s, int sIndex)
+            internal StringIterator(CodePointMap codePointMap, string str, int index)
             {
                 this.codePointMap = codePointMap;
-                Reset(s, sIndex);
+                Reset(str, index);
             }
 
             /// <summary>
             /// Resets the iterator to a new string and/or a new string index.
             /// </summary>
-            /// <param name="s">string to iterate over</param>
-            /// <param name="sIndex">string index where the iteration will start</param>
-            [SuppressMessage("ReSharper", "ParameterHidesMember")]
-            public void Reset(string s, int sIndex)
+            /// <param name="str">string to iterate over</param>
+            /// <param name="index">string index where the iteration will start</param>
+            public void Reset(string str, int index)
             {
-                this.s = new StringCharSequence(s);
-                this.sIndex = sIndex;
-                c = -1;
-                value = 0;
+                sequence = new StringCharSequence(str);
+                Index = index;
+                CodePoint = -1;
+                Value = 0;
             }
 
             /// <summary>
@@ -190,14 +178,14 @@ namespace CodeHive.unicode_trie
             ///          otherwise the iterator did not advance</returns>
             public virtual bool Next()
             {
-                if (sIndex >= s.length())
+                if (Index >= sequence.Length)
                 {
                     return false;
                 }
 
-                c = Character.codePointAt(s, sIndex);
-                sIndex += Character.charCount(c);
-                value = codePointMap.Get(c);
+                CodePoint = Character.codePointAt(sequence, Index);
+                Index += Character.charCount(CodePoint);
+                Value = codePointMap.Get(CodePoint);
                 return true;
             }
 
@@ -210,42 +198,42 @@ namespace CodeHive.unicode_trie
             ///          otherwise the iterator did not advance</returns>
             public virtual bool Previous()
             {
-                if (sIndex <= 0)
+                if (Index <= 0)
                 {
                     return false;
                 }
 
-                c = Character.codePointBefore(s, sIndex);
-                sIndex -= Character.charCount(c);
-                value = codePointMap.Get(c);
+                CodePoint = Character.codePointBefore(sequence, Index);
+                Index -= Character.charCount(CodePoint);
+                Value = codePointMap.Get(CodePoint);
                 return true;
             }
 
-            /// <returns>the string index</returns>
-            public int GetIndex()
-            {
-                return sIndex;
-            }
+            /// <summary>
+            /// The string index.
+            /// </summary>
+            public int Index { get; internal set; }
 
-            /// <returns>the code point</returns>
-            public int GetCodePoint()
-            {
-                return c;
-            }
+            /// <summary>
+            /// The code point.
+            /// </summary>
+            public int CodePoint { get; internal set; }
 
-            /// <returns>the map value,
-            ///          or an implementation-defined error value if
-            ///          the code point is an unpaired surrogate</returns>
-            public int GetValue()
-            {
-                return value;
-            }
+            /// <summary>
+            /// The map value, or an implementation-defined error value if the
+            /// code point is an unpaired surrogate.
+            /// </summary>
+            public int Value { get; internal set; }
+
+            internal int Length => sequence.Length;
+
+            internal char CharAt(in int index) => sequence.CharAt(index);
         }
 
         /// <summary>
         /// Protected no-args constructor.
         /// </summary>
-// ReSharper disable once EmptyConstructor
+        // ReSharper disable once EmptyConstructor
         protected CodePointMap()
         { }
 
@@ -326,16 +314,16 @@ namespace CodeHive.unicode_trie
                 return true;
             }
 
-            int surrEnd = option == RangeOption.FixedAllSurrogates ? 0xdfff : 0xdbff;
+            var surrEnd = option == RangeOption.FixedAllSurrogates ? 0xdfff : 0xdbff;
 
-            int end = range.end;
+            var end = range.End;
             if (end < 0xd7ff || start > surrEnd)
             {
                 return true;
             }
 
             // The range overlaps with surrogates, or ends just before the first one.
-            if (range.value == surrogateValue)
+            if (range.Value == surrogateValue)
             {
                 if (end >= surrEnd)
                 {
@@ -348,31 +336,29 @@ namespace CodeHive.unicode_trie
             {
                 if (start <= 0xd7ff)
                 {
-                    range.end = 0xd7ff; // Non-surrValue range ends before surrValue surrogates.
+                    range.End = 0xd7ff; // Non-surrValue range ends before surrValue surrogates.
                     return true;
                 }
 
                 // Start is a surrogate with a non-surrValue code *unit* value.
                 // Return a surrValue code *point* range.
-                range.value = surrogateValue;
+                range.Value = surrogateValue;
                 if (end > surrEnd)
                 {
-                    range.end = surrEnd; // Surrogate range ends before non-surrValue rest of range.
+                    range.End = surrEnd; // Surrogate range ends before non-surrValue rest of range.
                     return true;
                 }
             }
 
             // See if the surrValue surrogate range can be merged with
             // an immediately following range.
-            if (GetRange(surrEnd + 1, filter, range) && range.value == surrogateValue)
+            if (GetRange(surrEnd + 1, filter, range) && range.Value == surrogateValue)
             {
-                range.start = start;
+                range.Start = start;
                 return true;
             }
 
-            range.start = start;
-            range.end = surrEnd;
-            range.value = surrogateValue;
+            range.Set(start, surrEnd, surrogateValue);
             return true;
         }
 
@@ -399,7 +385,7 @@ namespace CodeHive.unicode_trie
         {
             var range = new Range();
 
-            while (-1 <= range.end && range.end < 0x10ffff && GetRange(range.end + 1, null, range))
+            while (-1 <= range.End && range.End < 0x10ffff && GetRange(range.End + 1, null, range))
             {
                 yield return range;
             }
@@ -409,12 +395,12 @@ namespace CodeHive.unicode_trie
         /// Returns an iterator (not a <see cref="IEnumerable{T}"/>) over code points of a string
         /// for fetching map values.
         /// </summary>
-        /// <param name="s">string to iterate over</param>
-        /// <param name="sIndex">string index where the iteration will start</param>
+        /// <param name="str">string to iterate over</param>
+        /// <param name="index">string index where the iteration will start</param>
         /// <returns>the iterator</returns>
-        public virtual StringIterator GetStringIterator(string s, int sIndex)
+        public virtual StringIterator GetStringIterator(string str, int index)
         {
-            return new StringIterator(this, s, sIndex);
+            return new StringIterator(this, str, index);
         }
     }
 }
