@@ -33,12 +33,12 @@ namespace CodeHive.unicode_trie.icu
             return dest;
         }
 
-        internal static char[] getChars(BinaryReader reader, in int length, int additionalSkipLength)
+        internal static ushort[] getUShorts(BinaryReader reader, in int length, int additionalSkipLength)
         {
-            var dest = new char[length];
+            var dest = new ushort[length];
             for (var i = 0; i < length; ++i)
             {
-                dest[i] = (char) reader.ReadUInt16();
+                dest[i] = reader.ReadUInt16();
             }
 
             skipBytes(reader, additionalSkipLength);

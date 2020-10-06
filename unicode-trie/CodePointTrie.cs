@@ -77,7 +77,7 @@ namespace CodeHive.unicode_trie
 
         private const int AsciiLimit = 0x80;
 
-        private CodePointTrie(char[] index, Data data, int highStart,
+        private CodePointTrie(ushort[] index, Data data, int highStart,
                               int index3NullOffset, int dataNullOffset)
         {
             this.ascii = new int[AsciiLimit];
@@ -232,12 +232,12 @@ namespace CodeHive.unicode_trie
             //     throw new ICUUncheckedIOException("Buffer too short for the CodePointTrie data");
             // }
 
-            var index = ICUBinary.getChars(reader, indexLength, 0);
+            var index = ICUBinary.getUShorts(reader, indexLength, 0);
             switch (valueWidth)
             {
                 case ValueWidth.Bits16:
                 {
-                    var data16 = ICUBinary.getChars(reader, dataLength, 0);
+                    var data16 = ICUBinary.getUShorts(reader, dataLength, 0);
                     return type == Kind.Fast
                         ? (CodePointTrie) new Fast16(index, data16, highStart, index3NullOffset, dataNullOffset)
                         : new Small16(index, data16, highStart, index3NullOffset, dataNullOffset);
@@ -660,9 +660,9 @@ namespace CodeHive.unicode_trie
 
         private class Data16 : Data
         {
-            private readonly char[] array;
+            private readonly ushort[] array;
 
-            internal Data16(char[] a)
+            internal Data16(ushort[] a)
             {
                 array = a;
             }
@@ -680,7 +680,7 @@ namespace CodeHive.unicode_trie
             {
                 foreach (var v in array)
                 {
-                    writer.Write((ushort) v);
+                    writer.Write(v);
                 }
 
                 return array.Length * 2;
@@ -747,7 +747,7 @@ namespace CodeHive.unicode_trie
 
         private readonly int[] ascii;
 
-        private readonly char[] index;
+        private readonly ushort[] index;
 
         private readonly Data data;
 
@@ -831,7 +831,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public abstract class Fast : CodePointTrie
         {
-            internal Fast(char[] index, Data data, int highStart, int index3NullOffset, int dataNullOffset)
+            internal Fast(ushort[] index, Data data, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, data, highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -980,7 +980,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public abstract class Small : CodePointTrie
         {
-            internal Small(char[] index, Data data, int highStart, int index3NullOffset, int dataNullOffset)
+            internal Small(ushort[] index, Data data, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, data, highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -1114,9 +1114,9 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Fast16 : Fast
         {
-            private readonly char[] dataArray;
+            private readonly ushort[] dataArray;
 
-            internal Fast16(char[] index, char[] data16, int highStart, int index3NullOffset, int dataNullOffset)
+            internal Fast16(ushort[] index, ushort[] data16, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data16(data16), highStart, index3NullOffset, dataNullOffset)
             {
                 dataArray = data16;
@@ -1163,7 +1163,7 @@ namespace CodeHive.unicode_trie
         {
             private readonly int[] dataArray;
 
-            internal Fast32(char[] index, int[] data32, int highStart,
+            internal Fast32(ushort[] index, int[] data32, int highStart,
                             int index3NullOffset, int dataNullOffset)
                 : base(index, new Data32(data32), highStart, index3NullOffset, dataNullOffset)
             {
@@ -1211,7 +1211,7 @@ namespace CodeHive.unicode_trie
         {
             private readonly byte[] dataArray;
 
-            internal Fast8(char[] index, byte[] data8, int highStart, int index3NullOffset, int dataNullOffset)
+            internal Fast8(ushort[] index, byte[] data8, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data8(data8), highStart, index3NullOffset, dataNullOffset)
             {
                 dataArray = data8;
@@ -1256,7 +1256,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Small16 : Small
         {
-            internal Small16(char[] index, char[] data16, int highStart, int index3NullOffset, int dataNullOffset)
+            internal Small16(ushort[] index, ushort[] data16, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data16(data16), highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -1279,7 +1279,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Small32 : Small
         {
-            internal Small32(char[] index, int[] data32, int highStart, int index3NullOffset, int dataNullOffset)
+            internal Small32(ushort[] index, int[] data32, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data32(data32), highStart, index3NullOffset, dataNullOffset)
             { }
 
@@ -1302,7 +1302,7 @@ namespace CodeHive.unicode_trie
         /// </summary>
         public class Small8 : Small
         {
-            internal Small8(char[] index, byte[] data8, int highStart, int index3NullOffset, int dataNullOffset)
+            internal Small8(ushort[] index, byte[] data8, int highStart, int index3NullOffset, int dataNullOffset)
                 : base(index, new Data8(data8), highStart, index3NullOffset, dataNullOffset)
             { }
 

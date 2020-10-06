@@ -458,7 +458,7 @@ namespace CodeHive.unicode_trie
         private int highValue;
 
         /** Temporary array while building the final data. */
-        private char[] index16;
+        private ushort[] index16;
 
         private byte[] flags = new byte[UNICODE_LIMIT >> CodePointTrie.SHIFT_3];
 
@@ -603,7 +603,7 @@ namespace CodeHive.unicode_trie
             return length == 0;
         }
 
-        private static bool EqualBlocks(char[] s, int si, int[] t, int ti, int length)
+        private static bool EqualBlocks(ushort[] s, int si, int[] t, int ti, int length)
         {
             while (length > 0 && s[si] == t[ti])
             {
@@ -615,7 +615,7 @@ namespace CodeHive.unicode_trie
             return length == 0;
         }
 
-        private static bool EqualBlocks(char[] s, int si, char[] t, int ti, int length)
+        private static bool EqualBlocks(ushort[] s, int si, ushort[] t, int ti, int length)
         {
             while (length > 0 && s[si] == t[ti])
             {
@@ -639,8 +639,8 @@ namespace CodeHive.unicode_trie
         }
 
         /** Search for an identical block. */
-        private static int FindSameBlock(char[] p, int pStart, int length,
-                                         char[] q, int qStart, int blockLength)
+        private static int FindSameBlock(ushort[] p, int pStart, int length,
+                                         ushort[] q, int qStart, int blockLength)
         {
             // Ensure that we do not even partially get past length.
             length -= blockLength;
@@ -703,7 +703,7 @@ namespace CodeHive.unicode_trie
             return overlap;
         }
 
-        private static int GetOverlap(char[] p, int length, int[] q, int qStart, int blockLength)
+        private static int GetOverlap(ushort[] p, int length, int[] q, int qStart, int blockLength)
         {
             var overlap = blockLength - 1;
             Debug.Assert(overlap <= length);
@@ -715,7 +715,7 @@ namespace CodeHive.unicode_trie
             return overlap;
         }
 
-        private static int GetOverlap(char[] p, int length, char[] q, int qStart, int blockLength)
+        private static int GetOverlap(ushort[] p, int length, ushort[] q, int qStart, int blockLength)
         {
             var overlap = blockLength - 1;
             Debug.Assert(overlap <= length);
@@ -959,7 +959,7 @@ namespace CodeHive.unicode_trie
                 }
             }
 
-            internal void Extend(char[] data, int minStart, int prevDataLength, int newDataLength)
+            internal void Extend(ushort[] data, int minStart, int prevDataLength, int newDataLength)
             {
                 var start = prevDataLength - blockLength;
                 if (start >= minStart)
@@ -990,7 +990,7 @@ namespace CodeHive.unicode_trie
                 return -1;
             }
 
-            internal int FindBlock(char[] data, int[] blockData, int blockStart)
+            internal int FindBlock(ushort[] data, int[] blockData, int blockStart)
             {
                 var hashCode = MakeHashCode(blockData, blockStart);
                 var entryIndex = FindEntry(null, data, blockData, null, blockStart, hashCode);
@@ -1002,7 +1002,7 @@ namespace CodeHive.unicode_trie
                 return -1;
             }
 
-            internal int FindBlock(char[] data, char[] blockData, int blockStart)
+            internal int FindBlock(ushort[] data, ushort[] blockData, int blockStart)
             {
                 var hashCode = MakeHashCode(blockData, blockStart);
                 var entryIndex = FindEntry(null, data, null, blockData, blockStart, hashCode);
@@ -1038,7 +1038,7 @@ namespace CodeHive.unicode_trie
                 return hashCode;
             }
 
-            private int MakeHashCode(char[] blockData, int blockStart)
+            private int MakeHashCode(ushort[] blockData, int blockStart)
             {
                 var blockLimit = blockStart + blockLength;
                 int hashCode = blockData[blockStart++];
@@ -1061,7 +1061,7 @@ namespace CodeHive.unicode_trie
                 return hashCode;
             }
 
-            private void AddEntry(int[] data32, char[] data16, int blockStart, int hashCode, int dataIndex)
+            private void AddEntry(int[] data32, ushort[] data16, int blockStart, int hashCode, int dataIndex)
             {
                 Debug.Assert(0 <= dataIndex && dataIndex < mask);
                 var entryIndex = FindEntry(data32, data16, data32, data16, blockStart, hashCode);
@@ -1071,8 +1071,8 @@ namespace CodeHive.unicode_trie
                 }
             }
 
-            private int FindEntry(int[] data32, char[] data16,
-                                  int[] blockData32, char[] blockData16, int blockStart, int hashCode)
+            private int FindEntry(int[] data32, ushort[] data16,
+                                  int[] blockData32, ushort[] blockData16, int blockStart, int hashCode)
             {
                 var shiftedHashCode = hashCode << shift;
                 var initialEntryIndex = modulo(hashCode, length - 1) + 1; // 1..length-1
@@ -1391,12 +1391,12 @@ namespace CodeHive.unicode_trie
 
             // Condense the fast index table.
             // Also, does it contain an index-3 block with all dataNullOffset?
-            var fastIndex = new char[fastIndexLength];
+            var fastIndex = new ushort[fastIndexLength];
             var i3FirstNull = -1;
             for (int i = 0, j = 0; i < fastILimit; ++j)
             {
                 var i3 = index[i];
-                fastIndex[j] = (char) i3;
+                fastIndex[j] = (ushort) i3;
                 if (i3 == dataNullOffset)
                 {
                     if (i3FirstNull < 0)
@@ -1512,7 +1512,7 @@ namespace CodeHive.unicode_trie
             // Index table: Fast index, index-1, index-3, index-2.
             // +1 for possible index table padding.
             var index16Capacity = fastIndexLength + index1Length + index3Capacity + index2Capacity + 1;
-            index16 = new char[index16Capacity];
+            index16 = new ushort[index16Capacity];
             Array.Copy(fastIndex, index16, Math.Min(fastIndex.Length, index16Capacity));
 
             mixedBlocks.Init(index16Capacity, CodePointTrie.INDEX_3_BLOCK_LENGTH);
@@ -1524,7 +1524,7 @@ namespace CodeHive.unicode_trie
             }
 
             // Compact the index-3 table and write an uncompacted version of the index-2 table.
-            var index2 = new char[index2Capacity];
+            var index2 = new ushort[index2Capacity];
             var i2Length = 0;
             i3FirstNull = index3NullOffset;
             var index3Start = fastIndexLength + index1Length;
@@ -1572,7 +1572,7 @@ namespace CodeHive.unicode_trie
                         var prevIndexLength = indexLength;
                         while (n < CodePointTrie.INDEX_3_BLOCK_LENGTH)
                         {
-                            index16[indexLength++] = (char) index[i + n++];
+                            index16[indexLength++] = (ushort) index[i + n++];
                         }
 
                         mixedBlocks.Extend(index16, index3Start, prevIndexLength, indexLength);
@@ -1595,29 +1595,29 @@ namespace CodeHive.unicode_trie
                         ++k;
                         var v = index[j++];
                         var upperBits = (v & 0x30000) >> 2;
-                        index16[k++] = (char) v;
+                        index16[k++] = (ushort) v;
                         v = index[j++];
                         upperBits |= (v & 0x30000) >> 4;
-                        index16[k++] = (char) v;
+                        index16[k++] = (ushort) v;
                         v = index[j++];
                         upperBits |= (v & 0x30000) >> 6;
-                        index16[k++] = (char) v;
+                        index16[k++] = (ushort) v;
                         v = index[j++];
                         upperBits |= (v & 0x30000) >> 8;
-                        index16[k++] = (char) v;
+                        index16[k++] = (ushort) v;
                         v = index[j++];
                         upperBits |= (v & 0x30000) >> 10;
-                        index16[k++] = (char) v;
+                        index16[k++] = (ushort) v;
                         v = index[j++];
                         upperBits |= (v & 0x30000) >> 12;
-                        index16[k++] = (char) v;
+                        index16[k++] = (ushort) v;
                         v = index[j++];
                         upperBits |= (v & 0x30000) >> 14;
-                        index16[k++] = (char) v;
+                        index16[k++] = (ushort) v;
                         v = index[j++];
                         upperBits |= (v & 0x30000) >> 16;
-                        index16[k++] = (char) v;
-                        index16[k - 9] = (char) upperBits;
+                        index16[k++] = (ushort) v;
+                        index16[k - 9] = (ushort) upperBits;
                     } while (j < jLimit);
 
                     var n = longI3Blocks.FindBlock(index16, index16, indexLength);
@@ -1667,7 +1667,7 @@ namespace CodeHive.unicode_trie
                 }
 
                 // Set the index-2 table entry.
-                index2[i2Length++] = (char) i3;
+                index2[i2Length++] = (ushort) i3;
             }
 
             Debug.Assert(i2Length == index2Capacity);
@@ -1735,7 +1735,7 @@ namespace CodeHive.unicode_trie
                 }
 
                 // Set the index-1 table entry.
-                index16[i1++] = (char) i2;
+                index16[i1++] = (ushort) i2;
             }
 
             Debug.Assert(i1 == index3Start);
@@ -1844,7 +1844,7 @@ namespace CodeHive.unicode_trie
             // Ensure data table alignment: The index length must be even for uint32_t data.
             if (valueWidth == CodePointTrie.ValueWidth.Bits32 && (indexLength & 1) != 0)
             {
-                index16[indexLength++] = (char) 0xffee; // arbitrary value
+                index16[indexLength++] = (ushort) 0xffee; // arbitrary value
             }
 
             // Make the total trie structure length a multiple of 4 bytes by padding the data table,
@@ -1910,14 +1910,14 @@ namespace CodeHive.unicode_trie
             Debug.Assert((length & 3) == 0);
 
             // Fill the index and data arrays.
-            char[] trieIndex;
+            ushort[] trieIndex;
             if (highStart <= fastLimit)
             {
                 // Condense only the fast index from the mutable-trie index.
-                trieIndex = new char[indexLength];
+                trieIndex = new ushort[indexLength];
                 for (int i = 0, j = 0; j < indexLength; i += SMALL_DATA_BLOCKS_PER_BMP_BLOCK, ++j)
                 {
-                    trieIndex[j] = (char) index[i];
+                    trieIndex[j] = (ushort) index[i];
                 }
             }
             else
@@ -1929,7 +1929,7 @@ namespace CodeHive.unicode_trie
                 }
                 else
                 {
-                    trieIndex = new char[indexLength];
+                    trieIndex = new ushort[indexLength];
                     Array.Copy(index16, trieIndex, Math.Min(index16.Length, indexLength));
                 }
             }
@@ -1940,10 +1940,10 @@ namespace CodeHive.unicode_trie
                 case CodePointTrie.ValueWidth.Bits16:
                 {
                     // Write 16-bit data values.
-                    var data16 = new char[dataLength];
+                    var data16 = new ushort[dataLength];
                     for (var i = 0; i < dataLength; ++i)
                     {
-                        data16[i] = (char) data[i];
+                        data16[i] = (ushort) data[i];
                     }
 
                     return type == CodePointTrie.Kind.Fast
