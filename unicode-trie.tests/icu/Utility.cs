@@ -1,6 +1,4 @@
-// ReSharper disable InconsistentNaming
-
-namespace CodeHive.unicode_trie.icu
+namespace CodeHive.unicode_trie.tests.icu
 {
     internal static class Utility
     {
@@ -8,15 +6,15 @@ namespace CodeHive.unicode_trie.icu
          * Convert a char to 4 hex uppercase digits.  E.g., hex('a') =>
          * "0041".
          */
-        internal static string hex(long ch)
+        internal static string Hex(long ch)
         {
-            return hex(ch, 4);
+            return Hex(ch, 4);
         }
 
         /**
          * Supplies a zero-padded hex representation of an integer (without 0x)
          */
-        private static string hex(long i, int places)
+        private static string Hex(long i, int places)
         {
             if (i == long.MinValue)
                 return "-8000000000000000";

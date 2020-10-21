@@ -232,26 +232,26 @@ namespace CodeHive.unicode_trie
             //     throw new ICUUncheckedIOException("Buffer too short for the CodePointTrie data");
             // }
 
-            var index = ICUBinary.getUShorts(reader, indexLength, 0);
+            var index = ICUBinary.GetUShorts(reader, indexLength, 0);
             switch (valueWidth)
             {
                 case ValueWidth.Bits16:
                 {
-                    var data16 = ICUBinary.getUShorts(reader, dataLength, 0);
+                    var data16 = ICUBinary.GetUShorts(reader, dataLength, 0);
                     return type == Kind.Fast
                         ? (CodePointTrie) new Fast16(index, data16, highStart, index3NullOffset, dataNullOffset)
                         : new Small16(index, data16, highStart, index3NullOffset, dataNullOffset);
                 }
                 case ValueWidth.Bits32:
                 {
-                    var data32 = ICUBinary.getInts(reader, dataLength, 0);
+                    var data32 = ICUBinary.GetInts(reader, dataLength, 0);
                     return type == Kind.Fast
                         ? (CodePointTrie) new Fast32(index, data32, highStart, index3NullOffset, dataNullOffset)
                         : new Small32(index, data32, highStart, index3NullOffset, dataNullOffset);
                 }
                 case ValueWidth.Bits8:
                 {
-                    var data8 = ICUBinary.getBytes(reader, dataLength, 0);
+                    var data8 = ICUBinary.GetBytes(reader, dataLength, 0);
                     return type == Kind.Fast
                         ? (CodePointTrie) new Fast8(index, data8, highStart, index3NullOffset, dataNullOffset)
                         : new Small8(index, data8, highStart, index3NullOffset, dataNullOffset);
@@ -292,7 +292,7 @@ namespace CodeHive.unicode_trie
             return ascii[c];
         }
 
-        private static int MaybeFilterValue(int value, int trieNullValue, int nullValue, IValueFilter filter)
+        private static int MaybeFilterValue(int value, int trieNullValue, int nullValue, Func<int, int> filter)
         {
             if (value == trieNullValue)
             {
@@ -300,14 +300,14 @@ namespace CodeHive.unicode_trie
             }
             else if (filter != null)
             {
-                value = filter.Apply(value);
+                value = filter(value);
             }
 
             return value;
         }
 
         /// <inheritdoc />
-        public override bool GetRange(int start, IValueFilter filter, Range range)
+        public override bool GetRange(int start, Func<int, int> filter, Range range)
         {
             if (start < 0 || MaxUnicode < start)
             {
@@ -320,7 +320,7 @@ namespace CodeHive.unicode_trie
                 var _value = data.GetFromIndex(_di);
                 if (filter != null)
                 {
-                    _value = filter.Apply(_value);
+                    _value = filter(_value);
                 }
 
                 range.Set(start, MaxUnicode, _value);
@@ -331,7 +331,7 @@ namespace CodeHive.unicode_trie
             var nullValue = this.nullValue;
             if (filter != null)
             {
-                nullValue = filter.Apply(nullValue);
+                nullValue = filter(nullValue);
             }
 
             var kind = GetKind();
@@ -545,7 +545,7 @@ namespace CodeHive.unicode_trie
 
             foreach (var i in index)
             {
-                bw.Write((ushort) i);
+                bw.Write(i);
             }
 
             length += index.Length * 2;
@@ -890,9 +890,9 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            public override StringIterator GetStringIterator(string str, int index)
+            public override StringIterator GetStringIterator(string str, int idx)
             {
-                return new FastStringIterator(this, str, index);
+                return new FastStringIterator(this, str, idx);
             }
 
             private class FastStringIterator : StringIterator
@@ -922,11 +922,11 @@ namespace CodeHive.unicode_trie
                     else
                     {
                         char trail;
-                        if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && Index < Length &&
+                        if (UTF16.IsSurrogateLead(lead) && Index < Length &&
                             char.IsLowSurrogate(trail = CharAt(Index)))
                         {
                             ++Index;
-                            CodePoint = Character.toCodePoint(lead, trail);
+                            CodePoint = Character.ToCodePoint(lead, trail);
                             dataIndex = trie.SmallIndex(Kind.Fast, CodePoint);
                         }
                         else
@@ -956,11 +956,11 @@ namespace CodeHive.unicode_trie
                     else
                     {
                         char lead;
-                        if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && Index > 0 &&
+                        if (!UTF16.IsSurrogateLead(trail) && Index > 0 &&
                             char.IsHighSurrogate(lead = CharAt(Index - 1)))
                         {
                             --Index;
-                            CodePoint = Character.toCodePoint(lead, trail);
+                            CodePoint = Character.ToCodePoint(lead, trail);
                             dataIndex = trie.SmallIndex(Kind.Fast, CodePoint);
                         }
                         else
@@ -1023,9 +1023,9 @@ namespace CodeHive.unicode_trie
             }
 
             /// <inheritdoc />
-            public override StringIterator GetStringIterator(string str, int index)
+            public override StringIterator GetStringIterator(string str, int idx)
             {
-                return new SmallStringIterator(this, str, index);
+                return new SmallStringIterator(this, str, idx);
             }
 
             private class SmallStringIterator : StringIterator
@@ -1055,11 +1055,11 @@ namespace CodeHive.unicode_trie
                     else
                     {
                         char trail;
-                        if (Normalizer2Impl.UTF16Plus.isSurrogateLead(lead) && Index < Length &&
+                        if (UTF16.IsSurrogateLead(lead) && Index < Length &&
                             char.IsLowSurrogate(trail = CharAt(Index)))
                         {
                             ++Index;
-                            CodePoint = Character.toCodePoint(lead, trail);
+                            CodePoint = Character.ToCodePoint(lead, trail);
                             dataIndex = trie.SmallIndex(Kind.Small, CodePoint);
                         }
                         else
@@ -1089,11 +1089,11 @@ namespace CodeHive.unicode_trie
                     else
                     {
                         char lead;
-                        if (!Normalizer2Impl.UTF16Plus.isSurrogateLead(trail) && Index > 0 &&
+                        if (!UTF16.IsSurrogateLead(trail) && Index > 0 &&
                             char.IsHighSurrogate(lead = CharAt(Index - 1)))
                         {
                             --Index;
-                            CodePoint = Character.toCodePoint(lead, trail);
+                            CodePoint = Character.ToCodePoint(lead, trail);
                             dataIndex = trie.SmallIndex(Kind.Small, CodePoint);
                         }
                         else

@@ -2,7 +2,6 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
-using CodeHive.unicode_trie.java;
 
 namespace CodeHive.unicode_trie.util
 {

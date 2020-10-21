@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics;
 
-// ReSharper disable InconsistentNaming
-
 namespace CodeHive.unicode_trie
 {
     /// <summary>
@@ -139,8 +137,7 @@ namespace CodeHive.unicode_trie
             return data[index[i] + (c & CodePointTrie.SMALL_DATA_MASK)];
         }
 
-        private static int MaybeFilterValue(int value, int initialValue, int nullValue,
-                                            IValueFilter filter)
+        private static int MaybeFilterValue(int value, int initialValue, int nullValue, Func<int, int> filter)
         {
             if (value == initialValue)
             {
@@ -148,7 +145,7 @@ namespace CodeHive.unicode_trie
             }
             else if (filter != null)
             {
-                value = filter.Apply(value);
+                value = filter(value);
             }
 
             return value;
@@ -156,7 +153,7 @@ namespace CodeHive.unicode_trie
 
         /// <inheritdoc />
         /// <remarks>The trie can be modified between calls to this function.</remarks>
-        public override bool GetRange(int start, IValueFilter filter, Range range)
+        public override bool GetRange(int start, Func<int, int> filter, Range range)
         {
             if (start < 0 || MAX_UNICODE < start)
             {
@@ -168,7 +165,7 @@ namespace CodeHive.unicode_trie
                 var _value = highValue;
                 if (filter != null)
                 {
-                    _value = filter.Apply(_value);
+                    _value = filter(_value);
                 }
 
                 range.Set(start, MAX_UNICODE, _value);
@@ -178,7 +175,7 @@ namespace CodeHive.unicode_trie
             var nullValue = initialValue;
             if (filter != null)
             {
-                nullValue = filter.Apply(nullValue);
+                nullValue = filter(nullValue);
             }
 
             var c = start;
@@ -1844,7 +1841,7 @@ namespace CodeHive.unicode_trie
             // Ensure data table alignment: The index length must be even for uint32_t data.
             if (valueWidth == CodePointTrie.ValueWidth.Bits32 && (indexLength & 1) != 0)
             {
-                index16[indexLength++] = (ushort) 0xffee; // arbitrary value
+                index16[indexLength++] = 0xffee; // arbitrary value
             }
 
             // Make the total trie structure length a multiple of 4 bytes by padding the data table,

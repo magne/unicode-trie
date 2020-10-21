@@ -110,7 +110,7 @@ namespace CodeHive.unicode_trie.tests.java
                     var c2 = GetChar(value, index);
                     if (char.IsLowSurrogate(c2))
                     {
-                        return Character.toCodePoint(c1, c2);
+                        return Character.ToCodePoint(c1, c2);
                     }
                 }
             }
@@ -143,7 +143,7 @@ namespace CodeHive.unicode_trie.tests.java
                 var c1 = GetChar(value, index);
                 if (char.IsHighSurrogate(c1))
                 {
-                    return Character.toCodePoint(c1, c2);
+                    return Character.ToCodePoint(c1, c2);
                 }
             }
 

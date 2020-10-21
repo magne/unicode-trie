@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using CodeHive.unicode_trie.icu;
 using CodeHive.unicode_trie.java;
+using CodeHive.unicode_trie.tests.icu;
 using CodeHive.unicode_trie.tests.java;
 using Xunit;
 
-// ReSharper disable InconsistentNaming
 // ReSharper disable RedundantAssignment
 // ReSharper disable SuggestBaseTypeForParameter
 
@@ -18,19 +18,19 @@ namespace CodeHive.unicode_trie.tests
         {
             internal SetRange(int start, int limit, int value)
             {
-                this.start = start;
-                this.limit = limit;
-                this.value = value;
+                Start = start;
+                Limit = limit;
+                Value = value;
             }
 
             public override string ToString()
             {
-                return Utility.hex(start) + ".." + Utility.hex(limit - 1) + ':' + Utility.hex(value);
+                return Utility.Hex(Start) + ".." + Utility.Hex(Limit - 1) + ':' + Utility.Hex(Value);
             }
 
-            internal readonly int start;
-            internal readonly int limit;
-            internal readonly int value;
+            internal int Start { get; }
+            internal int Limit { get; }
+            internal int Value { get; }
         }
 
         // Returned from getSpecialValues(). Values extracted from an array of CheckRange.
@@ -38,14 +38,14 @@ namespace CodeHive.unicode_trie.tests
         {
             internal SpecialValues(int i, int initialValue, int errorValue)
             {
-                this.i = i;
-                this.initialValue = initialValue;
-                this.errorValue = errorValue;
+                I = i;
+                InitialValue = initialValue;
+                ErrorValue = errorValue;
             }
 
-            internal readonly int i;
-            internal readonly int initialValue;
-            internal readonly int errorValue;
+            internal int I { get; }
+            internal int InitialValue { get; }
+            internal int ErrorValue { get; }
         }
 
         /*
@@ -60,23 +60,23 @@ namespace CodeHive.unicode_trie.tests
         {
             internal CheckRange(int limit, int value)
             {
-                this.limit = limit;
-                this.value = value;
+                Limit = limit;
+                Value = value;
             }
 
             public override string ToString()
             {
-                return "≤" + Utility.hex(limit - 1) + ':' + Utility.hex(value);
+                return "≤" + Utility.Hex(Limit - 1) + ':' + Utility.Hex(Value);
             }
 
-            internal readonly int limit;
-            internal readonly int value;
+            internal int Limit { get; }
+            internal int Value { get; }
         }
 
         private static int SkipSpecialValues(CheckRange[] checkRanges)
         {
             int i;
-            for (i = 0; i < checkRanges.Length && checkRanges[i].limit <= 0; ++i)
+            for (i = 0; i < checkRanges.Length && checkRanges[i].Limit <= 0; ++i)
             { }
 
             return i;
@@ -86,18 +86,18 @@ namespace CodeHive.unicode_trie.tests
         {
             var i = 0;
             int initialValue, errorValue;
-            if (i < checkRanges.Length && checkRanges[i].limit < 0)
+            if (i < checkRanges.Length && checkRanges[i].Limit < 0)
             {
-                errorValue = checkRanges[i++].value;
+                errorValue = checkRanges[i++].Value;
             }
             else
             {
                 errorValue = 0xad;
             }
 
-            if (i < checkRanges.Length && checkRanges[i].limit == 0)
+            if (i < checkRanges.Length && checkRanges[i].Limit == 0)
             {
-                initialValue = checkRanges[i++].value;
+                initialValue = checkRanges[i++].Value;
             }
             else
             {
@@ -108,15 +108,7 @@ namespace CodeHive.unicode_trie.tests
         }
 
         /* ucptrie_enum() callback, modifies a value */
-        private class TestValueFilter : CodePointMap.IValueFilter
-        {
-            public int Apply(int value)
-            {
-                return value ^ 0x5555;
-            }
-        }
-
-        private static readonly TestValueFilter TestFilter = new TestValueFilter();
+        private static readonly Func<int, int> TestFilter = value => value ^ 0x5555;
 
         private static bool DoCheckRange(string name, string variant,
                                          int start, bool getRangeResult, CodePointMap.Range range,
@@ -177,7 +169,7 @@ namespace CodeHive.unicode_trie.tests
                 var name = $"{typeName}/{option}({testName}) min=U+{start:X4}";
 
                 // Skip over special values and low ranges.
-                for (i = 0; i < checkRanges.Length && checkRanges[i].limit <= start; ++i)
+                for (i = 0; i < checkRanges.Length && checkRanges[i].Limit <= start; ++i)
                 { }
 
                 var i0 = i;
@@ -186,8 +178,8 @@ namespace CodeHive.unicode_trie.tests
                 {
                     if (i < checkRanges.Length)
                     {
-                        expEnd = checkRanges[i].limit - 1;
-                        expValue = checkRanges[i].value;
+                        expEnd = checkRanges[i].Limit - 1;
+                        expValue = checkRanges[i].Value;
                     }
                     else
                     {
@@ -214,8 +206,8 @@ namespace CodeHive.unicode_trie.tests
                 {
                     if (i < checkRanges.Length)
                     {
-                        expEnd = checkRanges[i].limit - 1;
-                        expValue = checkRanges[i].value ^ 0x5555;
+                        expEnd = checkRanges[i].Limit - 1;
+                        expValue = checkRanges[i].Value ^ 0x5555;
                     }
                     else
                     {
@@ -258,10 +250,10 @@ namespace CodeHive.unicode_trie.tests
             var specials = GetSpecialValues(checkRanges);
 
             var start = 0;
-            for (i = specials.i; i < checkRanges.Length; ++i)
+            for (i = specials.I; i < checkRanges.Length; ++i)
             {
-                var limit = checkRanges[i].limit;
-                value = checkRanges[i].value;
+                var limit = checkRanges[i].Limit;
+                value = checkRanges[i].Value;
 
                 while (start < limit)
                 {
@@ -315,7 +307,7 @@ namespace CodeHive.unicode_trie.tests
             /* test errorValue */
             value = trie.Get(-1);
             value2 = trie.Get(0x110000);
-            if (value != specials.errorValue || value2 != specials.errorValue)
+            if (value != specials.ErrorValue || value2 != specials.ErrorValue)
             {
                 Fail($"error: {typeName}({testName}).get(out of range) != errorValue\n");
             }
@@ -332,10 +324,10 @@ namespace CodeHive.unicode_trie.tests
             var specials = GetSpecialValues(checkRanges);
 
             var start = 0;
-            for (i = specials.i; i < checkRanges.Length; ++i)
+            for (i = specials.I; i < checkRanges.Length; ++i)
             {
-                var limit = checkRanges[i].limit;
-                value = checkRanges[i].value;
+                var limit = checkRanges[i].Limit;
+                value = checkRanges[i].Value;
 
                 while (start < limit)
                 {
@@ -357,7 +349,7 @@ namespace CodeHive.unicode_trie.tests
             /* test errorValue */
             value = mutableTrie.Get(-1);
             value2 = mutableTrie.Get(0x110000);
-            if (value != specials.errorValue || value2 != specials.errorValue)
+            if (value != specials.ErrorValue || value2 != specials.ErrorValue)
             {
                 Fail($"error: {typeName}({testName}).get(out of range) != errorValue\n");
             }
@@ -385,19 +377,19 @@ namespace CodeHive.unicode_trie.tests
             var countValues = 0;
             for (i = SkipSpecialValues(checkRanges); i < checkRanges.Length; ++i)
             {
-                value = checkRanges[i].value;
+                value = checkRanges[i].Value;
                 /* write three code points */
                 if (!ACCIDENTAL_SURROGATE_PAIR(s, prevCP))
                 {
-                    s.appendCodePoint(prevCP); /* start of the range */
+                    s.AppendCodePoint(prevCP); /* start of the range */
                     values[countValues++] = value;
                 }
 
-                c = checkRanges[i].limit;
+                c = checkRanges[i].Limit;
                 prevCP = (prevCP + c) / 2; /* middle of the range */
                 if (!ACCIDENTAL_SURROGATE_PAIR(s, prevCP))
                 {
-                    s.appendCodePoint(prevCP);
+                    s.AppendCodePoint(prevCP);
                     values[countValues++] = value;
                 }
 
@@ -405,7 +397,7 @@ namespace CodeHive.unicode_trie.tests
                 --c; /* end of the range */
                 if (!ACCIDENTAL_SURROGATE_PAIR(s, c))
                 {
-                    s.appendCodePoint(c);
+                    s.AppendCodePoint(c);
                     values[countValues++] = value;
                 }
             }
@@ -417,12 +409,12 @@ namespace CodeHive.unicode_trie.tests
             i = 0;
             while (sIndex < s.Length)
             {
-                c2 = s.codePointAt(sIndex);
-                sIndex += Character.charCount(c2);
+                c2 = s.CodePointAt(sIndex);
+                sIndex += Character.CharCount(c2);
                 Assert.True(si.Next(), "next() at " + si.Index);
                 c = si.CodePoint;
                 value = si.Value;
-                expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
+                expected = UTF16.IsSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {
                     Fail($"error: wrong value from UCPTRIE_NEXT({testName})(U+{c:X4}): 0x{value:X} instead of 0x{expected:X}\n");
@@ -445,12 +437,12 @@ namespace CodeHive.unicode_trie.tests
             while (sIndex > 0)
             {
                 --i;
-                c2 = s.codePointBefore(sIndex);
-                sIndex -= Character.charCount(c2);
+                c2 = s.CodePointBefore(sIndex);
+                sIndex -= Character.CharCount(c2);
                 Assert.True(si.Previous(), "previous() at " + si.Index);
                 c = si.CodePoint;
                 value = si.Value;
-                expected = Normalizer2Impl.UTF16Plus.isSurrogate(c) ? errorValue : values[i];
+                expected = UTF16.IsSurrogate(c) ? errorValue : values[i];
                 if (value != expected)
                 {
                     Fail($"error: wrong value from UCPTRIE_PREV({testName})(U+{c:X4}): 0x{value:X} instead of 0x{expected:X}\n");
@@ -571,7 +563,7 @@ namespace CodeHive.unicode_trie.tests
             int i;
             for (i = 0; i < checkRanges.Length; ++i)
             {
-                oredValues |= checkRanges[i].value;
+                oredValues |= checkRanges[i].Value;
             }
 
             TestBuilder(testName, mutableTrie, checkRanges);
@@ -615,7 +607,7 @@ namespace CodeHive.unicode_trie.tests
 
             Console.WriteLine("\ntesting Trie " + testName);
             var specials = GetSpecialValues(checkRanges);
-            var mutableTrie = new MutableCodePointTrie(specials.initialValue, specials.errorValue);
+            var mutableTrie = new MutableCodePointTrie(specials.InitialValue, specials.ErrorValue);
 
             /* set values from setRanges[] */
             for (i = 0; i < setRanges.Length; ++i)
@@ -627,9 +619,9 @@ namespace CodeHive.unicode_trie.tests
                     mutableTrie = clone;
                 }
 
-                var start = setRanges[i].start;
-                var limit = setRanges[i].limit;
-                var value = setRanges[i].value;
+                var start = setRanges[i].Start;
+                var limit = setRanges[i].Limit;
+                var value = setRanges[i].Value;
                 if ((limit - start) == 1)
                 {
                     mutableTrie.Set(start, value);

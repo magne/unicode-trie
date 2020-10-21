@@ -1,10 +1,8 @@
-// ReSharper disable InconsistentNaming
-
 namespace CodeHive.unicode_trie.java
 {
     internal static class Character
     {
-        internal static int codePointAt(ICharSequence seq, int index)
+        internal static int CodePointAt(ICharSequence seq, int index)
         {
             var c1 = seq.CharAt(index);
             if (char.IsHighSurrogate(c1))
@@ -15,7 +13,7 @@ namespace CodeHive.unicode_trie.java
                     var c2 = seq.CharAt(index);
                     if (char.IsLowSurrogate(c2))
                     {
-                        return toCodePoint(c1, c2);
+                        return ToCodePoint(c1, c2);
                     }
                 }
             }
@@ -23,7 +21,7 @@ namespace CodeHive.unicode_trie.java
             return c1;
         }
 
-        internal static int codePointBefore(ICharSequence seq, int index)
+        internal static int CodePointBefore(ICharSequence seq, int index)
         {
             --index;
             var c2 = seq.CharAt(index);
@@ -33,19 +31,19 @@ namespace CodeHive.unicode_trie.java
                 var c1 = seq.CharAt(index);
                 if (char.IsHighSurrogate(c1))
                 {
-                    return toCodePoint(c1, c2);
+                    return ToCodePoint(c1, c2);
                 }
             }
 
             return c2;
         }
 
-        internal static int charCount(int codePoint)
+        internal static int CharCount(int codePoint)
         {
             return codePoint >= 65536 ? 2 : 1;
         }
 
-        internal static int toCodePoint(char high, char low)
+        internal static int ToCodePoint(char high, char low)
         {
             return (high << 10) + low + -56613888;
         }

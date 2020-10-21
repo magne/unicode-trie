@@ -1,10 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using CodeHive.unicode_trie.java;
 using CodeHive.unicode_trie.util;
-
-#pragma warning disable 612
 
 namespace CodeHive.unicode_trie
 {
@@ -18,18 +16,18 @@ namespace CodeHive.unicode_trie
         /// Selectors for how getRange() should report value ranges overlapping with surrogates.
         /// Most users should use NORMAL.
         ///
-        /// <seealso cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
+        /// <seealso cref="CodePointMap.GetRange(int,Func{int,int},Range)"/>
         /// </summary>
         public enum RangeOption
         {
             /// <summary>
-            /// <see cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
+            /// <see cref="CodePointMap.GetRange(int,Func{int,int},Range)"/>
             /// enumerates all same-value ranges as stored in the map. Most users should use this option.
             /// </summary>
             Normal,
 
             /// <summary>
-            /// <see cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
+            /// <see cref="CodePointMap.GetRange(int,Func{int,int},Range)"/>
             /// enumerates all same-value ranges as stored in the map, except that lead surrogates
             /// (U+D800..U+DBFF) are treated as having the surrogateValue, which is passed to getRange()
             /// as a separate parameter. The surrogateValue is not transformed via filter().
@@ -46,7 +44,7 @@ namespace CodeHive.unicode_trie
             FixedLeadSurrogates,
 
             /// <summary>
-            /// <see cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
+            /// <see cref="CodePointMap.GetRange(int,Func{int,int},Range)"/>
             /// enumerates all same-value ranges as stored in the map, except that all surrogates
             /// (U+D800..U+DFFF) are treated as having the surrogateValue, which is passed to getRange()
             /// as a separate parameter. The surrogateValue is not transformed via filter().
@@ -64,34 +62,12 @@ namespace CodeHive.unicode_trie
         }
 
         /// <summary>
-        /// Callback function interface: Modifies a map value.
-        /// Optionally called by getRange().
-        /// The modified value will be returned by the getRange() function.
-        ///
-        /// <p/>Can be used to ignore some of the value bits,
-        /// make a filter for one of several values,
-        /// return a value index computed from the map value, etc.
-        ///
-        /// <seealso cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
-        /// <seealso cref="CodePointMap.GetEnumerator()"/>
-        /// </summary>
-        public interface IValueFilter
-        {
-            /// <summary>
-            /// Modifies the map value.
-            /// </summary>
-            /// <param name="value">map value</param>
-            /// <returns>modified value</returns>
-            public int Apply(int value);
-        }
-
-        /// <summary>
         /// Range iteration result data.
         /// Code points from start to end map to the same value.
-        /// The value may have been modified by <see cref="IValueFilter.Apply"/>,
+        /// The value may have been modified by a filter,
         /// or it may be the surrogateValue if a RangeOption other than "normal" was used.
         ///
-        /// <seealso cref="CodePointMap.GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
+        /// <seealso cref="CodePointMap.GetRange(int,Func{int,int},Range)"/>
         /// <seealso cref="CodePointMap.GetEnumerator()"/>
         /// </summary>
         public class Range
@@ -183,8 +159,8 @@ namespace CodeHive.unicode_trie
                     return false;
                 }
 
-                CodePoint = Character.codePointAt(sequence, Index);
-                Index += Character.charCount(CodePoint);
+                CodePoint = Character.CodePointAt(sequence, Index);
+                Index += Character.CharCount(CodePoint);
                 Value = codePointMap.Get(CodePoint);
                 return true;
             }
@@ -203,8 +179,8 @@ namespace CodeHive.unicode_trie
                     return false;
                 }
 
-                CodePoint = Character.codePointBefore(sequence, Index);
-                Index -= Character.charCount(CodePoint);
+                CodePoint = Character.CodePointBefore(sequence, Index);
+                Index -= Character.CharCount(CodePoint);
                 Value = codePointMap.Get(CodePoint);
                 return true;
             }
@@ -258,7 +234,7 @@ namespace CodeHive.unicode_trie
         /// (This is normally faster than iterating over code points and get()ting each value,
         /// but may be much slower than a data structure that stores ranges directly.)
         ///
-        /// <p/>If the <see cref="IValueFilter"/> parameter is not null, then
+        /// <p/>If the <see cref="Func{TResult,TValue}"/> parameter is not null, then
         /// the value to be delivered is passed through that filter, and the return value is the end
         /// of the range where all values are modified to the same actual value.
         /// The value is unchanged if that parameter is null.
@@ -276,11 +252,17 @@ namespace CodeHive.unicode_trie
         /// </code>
         /// </summary>
         /// <param name="start">range start</param>
-        /// <param name="filter">an object that may modify the map data value,
+        /// <param name="filter">a func that may modify the map data value,
         ///      or null if the values from the map are to be used unmodified</param>
         /// <param name="range">the range object that will be set to the code point range and value</param>
         /// <returns>true if start is 0..U+10FFFF; otherwise no new range is fetched</returns>
-        public abstract bool GetRange(int start, IValueFilter filter, Range range);
+        /// <remarks>
+        /// The filter parameter modifies a map value.
+        /// <p/>Can be used to ignore some of the value bits,
+        /// make a filter for one of several values,
+        /// return a value index computed from the map value, etc.
+        /// </remarks>
+        public abstract bool GetRange(int start, Func<int, int> filter, Range range);
 
         /// <summary>
         /// Sets the range object to a range of code points beginning with the start parameter.
@@ -290,19 +272,24 @@ namespace CodeHive.unicode_trie
         /// all those from start to there have the same value.
         /// Returns false if start is not 0..U+10FFFF.
         ///
-        /// <p/>Same as the simpler <see cref="GetRange(int,IValueFilter,Range)"/> but optionally
+        /// <p/>Same as the simpler <see cref="GetRange(int,Func{int,int},Range)"/> but optionally
         /// modifies the range if it overlaps with surrogate code points.
         /// </summary>
         /// <param name="start">range start</param>
         /// <param name="option">defines whether surrogates are treated normally,
         ///               or as having the surrogateValue; usually <see cref="RangeOption.Normal"/></param>
         /// <param name="surrogateValue">value for surrogates; ignored if option==<see cref="RangeOption.Normal"/></param>
-        /// <param name="filter">an object that may modify the map data value,
+        /// <param name="filter">a func that may modify the map data value,
         ///     or null if the values from the map are to be used unmodified</param>
         /// <param name="range">the range object that will be set to the code point range and value</param>
         /// <returns>true if start is 0..U+10FFFF; otherwise no new range is fetched</returns>
-        public bool GetRange(int start, RangeOption option, int surrogateValue,
-                             IValueFilter filter, Range range)
+        /// <remarks>
+        /// The filter parameter modifies a map value.
+        /// <p/>Can be used to ignore some of the value bits,
+        /// make a filter for one of several values,
+        /// return a value index computed from the map value, etc.
+        /// </remarks>
+        public bool GetRange(int start, RangeOption option, int surrogateValue, Func<int, int> filter, Range range)
         {
             if (!GetRange(start, filter, range))
             {
@@ -374,7 +361,7 @@ namespace CodeHive.unicode_trie
 
         /// <summary>
         /// Convenience enumerator over same-map-value code point ranges.
-        /// Same as looping over all ranges with <see cref="GetRange(int,CodeHive.unicode_trie.CodePointMap.IValueFilter,CodeHive.unicode_trie.CodePointMap.Range)"/>
+        /// Same as looping over all ranges with <see cref="GetRange(int,Func{int,int},Range)"/>
         /// without filtering.
         /// Adjacent ranges have different map values.
         ///

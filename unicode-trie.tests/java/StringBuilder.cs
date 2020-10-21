@@ -1,13 +1,15 @@
 using System;
 using CodeHive.unicode_trie.java;
 
-// ReSharper disable InconsistentNaming
+// Unreachable code
+#pragma warning disable 162
+// ReSharper disable HeuristicUnreachableCode
 
 namespace CodeHive.unicode_trie.tests.java
 {
     internal class StringBuilder : ICharSequence
     {
-        private const bool COMPACT_STRINGS = true;
+        private const bool CompactStrings = true;
 
         private byte[] value;
         private byte   coder;
@@ -15,7 +17,8 @@ namespace CodeHive.unicode_trie.tests.java
 
         internal StringBuilder(int capacity = 16)
         {
-            if (COMPACT_STRINGS)
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            if (CompactStrings)
             {
                 value = new byte[capacity];
                 coder = 0;
@@ -29,18 +32,18 @@ namespace CodeHive.unicode_trie.tests.java
 
         public int Length => count;
 
-        private void ensureCapacityInternal(int minimumCapacity)
+        private void EnsureCapacityInternal(int minimumCapacity)
         {
             var oldCapacity = value.Length >> coder;
             if (minimumCapacity - oldCapacity > 0)
             {
-                var newValue = new byte[newCapacity(minimumCapacity) << coder];
+                var newValue = new byte[NewCapacity(minimumCapacity) << coder];
                 Array.Copy(value, newValue, value.Length);
                 value = newValue;
             }
         }
 
-        private int newCapacity(int minCapacity)
+        private int NewCapacity(int minCapacity)
         {
             var oldCapacity = value.Length >> coder;
             var newCapacity = (oldCapacity << 1) + 2;
@@ -49,25 +52,25 @@ namespace CodeHive.unicode_trie.tests.java
                 newCapacity = minCapacity;
             }
 
-            var SAFE_BOUND = 2147483639 >> coder;
-            return newCapacity > 0 && SAFE_BOUND - newCapacity >= 0 ? newCapacity : hugeCapacity(minCapacity);
+            var safeBound = 2147483639 >> coder;
+            return newCapacity > 0 && safeBound - newCapacity >= 0 ? newCapacity : HugeCapacity(minCapacity);
         }
 
-        private int hugeCapacity(int minCapacity)
+        private int HugeCapacity(int minCapacity)
         {
-            var SAFE_BOUND = 2147483639 >> coder;
-            var UNSAFE_BOUND = 2147483647 >> coder;
-            if (UNSAFE_BOUND - minCapacity < 0)
+            var safeBound = 2147483639 >> coder;
+            var unsafeBound = 2147483647 >> coder;
+            if (unsafeBound - minCapacity < 0)
             {
                 throw new OutOfMemoryException();
             }
 
-            return minCapacity > SAFE_BOUND ? minCapacity : SAFE_BOUND;
+            return minCapacity > safeBound ? minCapacity : safeBound;
         }
 
-        private void inflate()
+        private void Inflate()
         {
-            if (isLatin1())
+            if (IsLatin1())
             {
                 var buf = StringUtf16.NewBytesFor(value.Length);
                 StringUtf16.Inflate(value, 0, buf, 0, count);
@@ -79,45 +82,43 @@ namespace CodeHive.unicode_trie.tests.java
         public char CharAt(in int index)
         {
             StringUtf16.CheckIndex(index, count);
-            return isLatin1() ? (char) (value[index] & 255) : StringUtf16.CharAt(value, index);
+            return IsLatin1() ? (char) (value[index] & 255) : StringUtf16.CharAt(value, index);
         }
 
-        internal int codePointAt(int index)
+        internal int CodePointAt(int index)
         {
-            var count = this.count;
-            var value = this.value;
             StringUtf16.CheckIndex(index, count);
-            return isLatin1() ? value[index] & 255 : StringUtf16.CodePointAtSb(value, index, count);
+            return IsLatin1() ? value[index] & 255 : StringUtf16.CodePointAtSb(value, index, count);
         }
 
-        internal int codePointBefore(int index)
+        internal int CodePointBefore(int index)
         {
             var i = index - 1;
             if (i >= 0 && i < count)
             {
-                return isLatin1() ? value[i] & 255 : StringUtf16.CodePointBeforeSb(value, index);
+                return IsLatin1() ? value[i] & 255 : StringUtf16.CodePointBeforeSb(value, index);
             }
 
             throw new ArgumentException();
         }
 
-        internal StringBuilder appendCodePoint(int codePoint)
+        internal StringBuilder AppendCodePoint(int codePoint)
         {
-            return Character2.IsBmpCodePoint(codePoint) ? append((char) codePoint) : append(Character2.ToChars(codePoint));
+            return Character2.IsBmpCodePoint(codePoint) ? Append((char) codePoint) : Append(Character2.ToChars(codePoint));
         }
 
-        private StringBuilder append(char c)
+        private StringBuilder Append(char c)
         {
-            ensureCapacityInternal(count + 1);
-            if (isLatin1() && StringLatin1.canEncode(c))
+            EnsureCapacityInternal(count + 1);
+            if (IsLatin1() && StringLatin1.CanEncode(c))
             {
                 value[count++] = (byte) c;
             }
             else
             {
-                if (isLatin1())
+                if (IsLatin1())
                 {
-                    inflate();
+                    Inflate();
                 }
 
                 StringUtf16.PutCharSb(value, count++, c);
@@ -126,23 +127,22 @@ namespace CodeHive.unicode_trie.tests.java
             return this;
         }
 
-        private StringBuilder append(char[] str)
+        private StringBuilder Append(char[] str)
         {
             var len = str.Length;
-            ensureCapacityInternal(count + len);
-            appendChars(str, 0, len);
+            EnsureCapacityInternal(count + len);
+            AppendChars(str, 0, len);
             return this;
         }
 
-        private bool isLatin1()
+        private bool IsLatin1()
         {
-            return COMPACT_STRINGS && coder == 0;
+            return CompactStrings && coder == 0;
         }
 
-        private void appendChars(char[] s, int off, int end)
+        private void AppendChars(char[] s, int off, int end)
         {
-            var count = this.count;
-            if (isLatin1())
+            if (IsLatin1())
             {
                 var val = value;
                 var i = off;
@@ -150,12 +150,12 @@ namespace CodeHive.unicode_trie.tests.java
                 for (var j = count; i < end; ++i)
                 {
                     var c = s[i];
-                    if (!StringLatin1.canEncode(c))
+                    if (!StringLatin1.CanEncode(c))
                     {
-                        this.count = j;
-                        inflate();
+                        count = j;
+                        Inflate();
                         StringUtf16.PutCharsSb(value, j, s, i, end);
-                        this.count = j + end - i;
+                        count = j + end - i;
                         return;
                     }
 
@@ -167,13 +167,13 @@ namespace CodeHive.unicode_trie.tests.java
                 StringUtf16.PutCharsSb(value, count, s, off, end);
             }
 
-            this.count = count + end - off;
+            count = count + end - off;
         }
 
         public override string ToString()
         {
             var chars = new char[count];
-            if (isLatin1())
+            if (IsLatin1())
             {
                 for (var i = 0; i < count; ++i)
                 {
