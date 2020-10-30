@@ -160,15 +160,16 @@ namespace CodeHive.unicode_trie
                 return false;
             }
 
+            var value = 0;
             if (start >= highStart)
             {
-                var _value = highValue;
+                value = highValue;
                 if (filter != null)
                 {
-                    _value = filter(_value);
+                    value = filter(value);
                 }
 
-                range.Set(start, MAX_UNICODE, _value);
+                range.Set(start, MAX_UNICODE, value);
                 return true;
             }
 
@@ -180,7 +181,7 @@ namespace CodeHive.unicode_trie
 
             var c = start;
             // Initialize to make compiler happy. Real value when haveValue is true.
-            int trieValue = 0, value = 0;
+            int trieValue = 0;
             var haveValue = false;
             var i = c >> CodePointTrie.SHIFT_3;
             do
@@ -319,19 +320,17 @@ namespace CodeHive.unicode_trie
             var limit = end + 1;
             if ((start & CodePointTrie.SMALL_DATA_MASK) != 0)
             {
-                // Set partial block at [start..following block boundary[.
+                // Set partial block at [start..following block boundary].
                 var block = GetDataBlock(start >> CodePointTrie.SHIFT_3);
                 var nextStart = (start + CodePointTrie.SMALL_DATA_MASK) & ~CodePointTrie.SMALL_DATA_MASK;
                 if (nextStart <= limit)
                 {
-                    FillBlock(block,                           start & CodePointTrie.SMALL_DATA_MASK,
-                        CodePointTrie.SMALL_DATA_BLOCK_LENGTH, value);
+                    FillBlock(block, start & CodePointTrie.SMALL_DATA_MASK, CodePointTrie.SMALL_DATA_BLOCK_LENGTH, value);
                     start = nextStart;
                 }
                 else
                 {
-                    FillBlock(block,                           start & CodePointTrie.SMALL_DATA_MASK,
-                        limit & CodePointTrie.SMALL_DATA_MASK, value);
+                    FillBlock(block, start & CodePointTrie.SMALL_DATA_MASK, limit & CodePointTrie.SMALL_DATA_MASK, value);
                     return;
                 }
             }
@@ -793,8 +792,8 @@ namespace CodeHive.unicode_trie
 
         private class AllSameBlocks
         {
-            private const  int NEW_UNIQUE = -1;
-            internal const int OVERFLOW   = -2;
+            private const  int NewUnique = -1;
+            internal const int Overflow  = -2;
 
             internal AllSameBlocks()
             {
@@ -819,22 +818,22 @@ namespace CodeHive.unicode_trie
                     }
                 }
 
-                if (length == CAPACITY)
+                if (length == Capacity)
                 {
-                    return OVERFLOW;
+                    return Overflow;
                 }
 
                 mostRecent = length;
                 indexes[length] = index;
                 values[length] = value;
                 refCounts[length++] = count;
-                return NEW_UNIQUE;
+                return NewUnique;
             }
 
             /** Replaces the block which has the lowest reference count. */
             internal void Add(int index, int count, int value)
             {
-                Debug.Assert(length == CAPACITY);
+                Debug.Assert(length == Capacity);
                 var least = -1;
                 var leastCount = I_LIMIT;
                 for (var i = 0; i < length; ++i)
@@ -875,14 +874,14 @@ namespace CodeHive.unicode_trie
                 return indexes[max];
             }
 
-            private const int CAPACITY = 32;
+            private const int Capacity = 32;
 
             private int length;
             private int mostRecent;
 
-            private readonly int[] indexes   = new int[CAPACITY];
-            private readonly int[] values    = new int[CAPACITY];
-            private readonly int[] refCounts = new int[CAPACITY];
+            private readonly int[] indexes   = new int[Capacity];
+            private readonly int[] values    = new int[Capacity];
+            private readonly int[] refCounts = new int[Capacity];
         }
 
         // Custom hash table for mixed-value blocks to be found anywhere in the
@@ -1197,8 +1196,8 @@ namespace CodeHive.unicode_trie
                     {
                         // Do all of the fast-range data block's ALL_SAME parts have the same value?
                         var allSame = true;
-                        var next_i = i + inc;
-                        for (var j = i + 1; j < next_i; ++j)
+                        var nextI = i + inc;
+                        for (var j = i + 1; j < nextI; ++j)
                         {
                             Debug.Assert(flags[j] == ALL_SAME);
                             if (index[j] != value)
@@ -1224,7 +1223,7 @@ namespace CodeHive.unicode_trie
 
                 // Is there another ALL_SAME block with the same value?
                 var other = allSameBlocks.FindOrAdd(i, inc, value);
-                if (other == AllSameBlocks.OVERFLOW)
+                if (other == AllSameBlocks.Overflow)
                 {
                     // The fixed-size array overflowed. Slow check for a duplicate block.
                     var jInc = SMALL_DATA_BLOCKS_PER_BMP_BLOCK;

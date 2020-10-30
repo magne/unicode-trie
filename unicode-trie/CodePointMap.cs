@@ -137,6 +137,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="str">string to iterate over</param>
             /// <param name="index">string index where the iteration will start</param>
+            // ReSharper disable once MemberCanBePrivate.Global
             public void Reset(string str, int index)
             {
                 sequence = new StringCharSequence(str);

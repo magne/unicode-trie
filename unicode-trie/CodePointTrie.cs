@@ -279,7 +279,7 @@ namespace CodeHive.unicode_trie
         /// <inheritdoc />
         public override int Get(int c)
         {
-            return data.GetFromIndex(cpIndex(c));
+            return data.GetFromIndex(CpIndex(c));
         }
 
         /// <summary>
@@ -314,16 +314,18 @@ namespace CodeHive.unicode_trie
                 return false;
             }
 
+            int di;
+            var value = 0;
             if (start >= highStart)
             {
-                var _di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
-                var _value = data.GetFromIndex(_di);
+                di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
+                value = data.GetFromIndex(di);
                 if (filter != null)
                 {
-                    _value = filter(_value);
+                    value = filter(value);
                 }
 
-                range.Set(start, MaxUnicode, _value);
+                range.Set(start, MaxUnicode, value);
                 return true;
             }
 
@@ -340,7 +342,7 @@ namespace CodeHive.unicode_trie
             var prevBlock = -1;
             var c = start;
             // Initialize to make compiler happy. Real value when haveValue is true.
-            int trieValue = 0, value = 0;
+            var trieValue = 0;
             var haveValue = false;
             do
             {
@@ -457,8 +459,8 @@ namespace CodeHive.unicode_trie
                         }
                         else
                         {
-                            var _di = block + (c & dataMask);
-                            var trieValue2 = data.GetFromIndex(_di);
+                            di = block + (c & dataMask);
+                            var trieValue2 = data.GetFromIndex(di);
                             if (haveValue)
                             {
                                 if (trieValue2 != trieValue)
@@ -483,7 +485,7 @@ namespace CodeHive.unicode_trie
 
                             while ((++c & dataMask) != 0)
                             {
-                                trieValue2 = data.GetFromIndex(++_di);
+                                trieValue2 = data.GetFromIndex(++di);
                                 if (trieValue2 != trieValue)
                                 {
                                     if (filter == null ||
@@ -503,7 +505,7 @@ namespace CodeHive.unicode_trie
             } while (c < highStart);
 
             Debug.Assert(haveValue);
-            var di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
+            di = dataLength - HIGH_VALUE_NEG_DATA_OFFSET;
             var highValue = data.GetFromIndex(di);
             if (MaybeFilterValue(highValue, this.nullValue, nullValue, filter) != value)
             {
@@ -824,7 +826,7 @@ namespace CodeHive.unicode_trie
             return dataBlock + (c & SMALL_DATA_MASK);
         }
 
-        internal abstract int cpIndex(int c);
+        internal abstract int CpIndex(int c);
 
         /// <summary>
         /// A CodePointTrie with <see cref="CodePointTrie.Kind.Fast"/>
@@ -844,6 +846,7 @@ namespace CodeHive.unicode_trie
             ///                  use null to accept any data value width</param>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Fast FromBinary(ValueWidth valueWidth, Stream stream)
             {
                 return (Fast) CodePointTrie.FromBinary(stream, Kind.Fast, valueWidth);
@@ -872,7 +875,7 @@ namespace CodeHive.unicode_trie
             /// <returns>The supplementary code point's trie value.</returns>
             public abstract int SuppGet(int c);
 
-            internal override int cpIndex(int c)
+            internal override int CpIndex(int c)
             {
                 if (c >= 0)
                 {
@@ -993,6 +996,7 @@ namespace CodeHive.unicode_trie
             ///                  use null to accept any data value width</param>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Small FromBinary(ValueWidth valueWidth, Stream stream)
             {
                 return (Small) CodePointTrie.FromBinary(stream, Kind.Small, valueWidth);
@@ -1004,7 +1008,7 @@ namespace CodeHive.unicode_trie
                 return Kind.Small;
             }
 
-            internal override int cpIndex(int c)
+            internal override int CpIndex(int c)
             {
                 if (c >= 0)
                 {
@@ -1050,7 +1054,7 @@ namespace CodeHive.unicode_trie
                     int dataIndex;
                     if (!char.IsSurrogate(lead))
                     {
-                        dataIndex = trie.cpIndex(CodePoint);
+                        dataIndex = trie.CpIndex(CodePoint);
                     }
                     else
                     {
@@ -1084,7 +1088,7 @@ namespace CodeHive.unicode_trie
                     int dataIndex;
                     if (!char.IsSurrogate(trail))
                     {
-                        dataIndex = trie.cpIndex(CodePoint);
+                        dataIndex = trie.CpIndex(CodePoint);
                     }
                     else
                     {
@@ -1129,6 +1133,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Fast16 FromBinary(Stream stream)
             {
                 return (Fast16) CodePointTrie.FromBinary(stream, Kind.Fast, ValueWidth.Bits16);
@@ -1137,7 +1142,7 @@ namespace CodeHive.unicode_trie
             /// <inheritdoc />
             public override int Get(int c)
             {
-                return dataArray[cpIndex(c)];
+                return dataArray[CpIndex(c)];
             }
 
             /// <inheritdoc />
@@ -1177,6 +1182,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Fast32 FromBinary(Stream stream)
             {
                 return (Fast32) CodePointTrie.FromBinary(stream, Kind.Fast, ValueWidth.Bits32);
@@ -1185,7 +1191,7 @@ namespace CodeHive.unicode_trie
             /// <inheritdoc />
             public override int Get(int c)
             {
-                return dataArray[cpIndex(c)];
+                return dataArray[CpIndex(c)];
             }
 
             /// <inheritdoc />
@@ -1224,6 +1230,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Fast8 FromBinary(Stream stream)
             {
                 return (Fast8) CodePointTrie.FromBinary(stream, Kind.Fast, ValueWidth.Bits8);
@@ -1232,7 +1239,7 @@ namespace CodeHive.unicode_trie
             /// <inheritdoc />
             public override int Get(int c)
             {
-                return dataArray[cpIndex(c)] & 0xff;
+                return dataArray[CpIndex(c)] & 0xff;
             }
 
             /// <inheritdoc />
@@ -1267,6 +1274,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Small16 FromBinary(Stream stream)
             {
                 return (Small16) CodePointTrie.FromBinary(stream, Kind.Small, ValueWidth.Bits16);
@@ -1290,6 +1298,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Small32 FromBinary(Stream stream)
             {
                 return (Small32) CodePointTrie.FromBinary(stream, Kind.Small, ValueWidth.Bits32);
@@ -1313,6 +1322,7 @@ namespace CodeHive.unicode_trie
             /// </summary>
             /// <param name="stream">a stream containing the binary data of a CodePointTrie</param>
             /// <returns>the trie</returns>
+            // ReSharper disable once UnusedMember.Global
             public static Small8 FromBinary(Stream stream)
             {
                 return (Small8) CodePointTrie.FromBinary(stream, Kind.Small, ValueWidth.Bits8);
